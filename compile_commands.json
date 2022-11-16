@@ -1,0 +1,32 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-W",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "main.o",
+      "main.c"
+    ],
+    "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
+    "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.c",
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-W",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "matrix.o",
+      "matrix.c"
+    ],
+    "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
+    "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/matrix.c",
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/matrix.o"
+  }
+]
