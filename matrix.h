@@ -4,49 +4,30 @@
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
 
+#define BLOCK_SIZE 0x10
+
+#define for_each_blocks(matrix, block_name, text) \
+  do { \
+    size_t __block_size_width = matrix.width / BLOCK_SIZE; \
+    size_t __block_size_height = matrix.height / BLOCK_SIZE; \
+    block* block_name; \
+    for(size_t __index_of_height = 0; __index_of_height < __block_size_height; __index_of_height++) { \
+      for(size_t __index_of_width = 0; __index_of_width < __block_size_width; __index_of_width++) { \
+        block_name = matrix.blocks[__index_of_height][__index_of_width]; \
+        text \
+      } \
+    } \
+  } while(0)
+
+typedef struct {
+  INNER_TYPE element[BLOCK_SIZE][BLOCK_SIZE];
+} block;
+
 typedef struct {
   size_t width, height;
-  INNER_TYPE **element;
-} normal_matrix;
-
-// CACHE1: 10 20 30 40 ...
-//         11 21 31 41 ...
-//         12 22 32 42 ...
-
-typedef struct {
-  size_t width, height;
-  INNER_TYPE **element;
-} transpose_matrix;
-
-/// C1
-/// 10 20 30 40 ...
-/// 11 21 31 41 ...
-/// 12 22 32 42 ...
-
-enum matrix_type {
-  normal;
-  transpose;
-}
-
-typedef struct {
-  enum {
-    normal,
-    transpose,
-  } tag;
-  union {
-    normal_matrix normal;
-    transpose_matrix transpose;
-  } data;
+  block ***blocks; // TODO: Replace with L2 cache.
 } matrix;
 
-normal_matrix allocate_normal_matrix(size_t width, size_t height);
-transpose_matrix allocate_transpose_matrix(size_t width, size_t height);
-void show_normal_matrix(normal_matrix mat);
-void show_transpose_matrix(transpose_matrix mat);
-
-static inline INNER_TYPE* at_normal(normal_matrix mat, size_t x, size_t y) {
-  return &mat.element[y][x];
-}
-static inline INNER_TYPE* at_transpose(transpose_matrix mat, size_t x, size_t y) {
-  return &mat.element[x][y];
-}
+block* allocate_block();
+matrix allocate_matrix(size_t width, size_t height);
+void show_matrix(matrix mat);

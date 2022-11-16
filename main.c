@@ -3,15 +3,15 @@
 
 #include "matrix.h"
 
-
 int main() {
-  normal_matrix mat = allocate_normal_matrix(10, 20);
-  for(size_t x = 0;x < 10;x++) {
-    for(size_t y = 0; y < 20;y++) {
-      double* d = at_normal(mat, x, y);
-      *d = 100. * x + y;
-    }
-  }
-  show_normal_matrix(mat);
+  matrix mat = allocate_matrix(0x20, 0x20);
+
+  puts("created");
+
+  for_each_blocks(mat, block, {
+    printf("%p\n", block);
+  });
+
+  return 0;
 }
 

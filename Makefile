@@ -1,6 +1,6 @@
 CC := gcc
 OBJS := main.o matrix.o
-CFLAGS := -W -Wall -Wextra
+CFLAGS := -W -Wall -Wextra -g3
 
 main: $(OBJS)
 
