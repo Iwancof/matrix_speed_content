@@ -5,6 +5,9 @@
 #define CACHE_SIZE 0x100
 
 #define BLOCK_SIZE 0x10
+// #define MATRIX_SIZE 0x20000000
+#define MATRIX_SIZE 0x2000
+#define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
 #define for_each_blocks(matrix, block_name, text) \
   do { \
@@ -24,10 +27,8 @@ typedef struct {
 } block;
 
 typedef struct {
-  size_t width, height;
-  block ***blocks; // TODO: Replace with L2 cache.
+  block blocks[SUPER_SIZE][SUPER_SIZE]; // TODO: Replace with L2 cache.
 } matrix;
 
-block* allocate_block();
-matrix allocate_matrix(size_t width, size_t height);
-void show_matrix(matrix mat);
+matrix *allocate_matrix();
+void show_matrix(matrix *mat);
