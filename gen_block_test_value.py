@@ -23,9 +23,9 @@ for per_y in dest:
 
 f.close()
 
-print(left)
-print(right)
+# print(left)
+# print(right)
 
-print(dest)
+# print(dest)
 
 

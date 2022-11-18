@@ -10,7 +10,7 @@ int main() {
   matrix *left = allocate_matrix();
   matrix *right = allocate_matrix();
   matrix *dest1 = allocate_matrix();
-  matrix *dest2 = allocate_matrix();
+  // matrix *dest2 = allocate_matrix();
 
   matrix *thread_memo[PARALLEL];
   for(int i = 0;i < PARALLEL;i++) {
@@ -39,12 +39,13 @@ int main() {
   end = omp_get_wtime();
   printf("elapsed %f\n", end - start);
 
+  /*
   puts("vanilla");
   start = omp_get_wtime();
   matrix_mult_vanilla(left, right, dest2);
   end = omp_get_wtime();
   printf("elapsed %f\n", end - start);
+  */
 
   return 0;
 }
-

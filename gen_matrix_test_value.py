@@ -2,17 +2,17 @@ import numpy as np
 
 np.random.seed(0)
 
-size = 0x1000
+size = 0x400
 
 left = np.random.rand(size, size)
 right = np.random.rand(size, size)
 
 dest = left @ right
 
-print(left)
-print(right)
+# print(left)
+# print(right)
 
-print(dest)
+# print(dest)
 
 
 f = open("./matrix_test_value", "w")

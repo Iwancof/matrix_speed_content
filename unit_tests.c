@@ -16,8 +16,8 @@ int main() {
 
   suite = CU_add_suite("Block matrix test", NULL, NULL);
 
-  // CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
-  // CU_add_test(suite, "Block mult random test", block_mult_random_test);
+  CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
+  CU_add_test(suite, "Block mult random test", block_mult_random_test);
   CU_add_test(suite, "Matrix mult random test", matrix_mult_random_test);
 
   CU_console_run_tests();

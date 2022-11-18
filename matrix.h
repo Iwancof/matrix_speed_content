@@ -86,10 +86,11 @@ static inline void matrix_mult_per_block(matrix *left, matrix *right,
     for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
       block *dest_block = &dest->blocks[cache_block_y][cache_block_x];
       for (int i = 0; i < PARALLEL; i++) {
-        block* from = &thread_memo[i]->blocks[cache_block_y][cache_block_x];
+        block *from = &thread_memo[i]->blocks[cache_block_y][cache_block_x];
         for (block_x = 0; block_x < BLOCK_SIZE; block_x++) {
           for (block_y = 0; block_y < BLOCK_SIZE; block_y++) {
-            dest_block->element[block_y][block_x] += from->element[block_y][block_x];
+            dest_block->element[block_y][block_x] +=
+                from->element[block_y][block_x];
           }
         }
       }
