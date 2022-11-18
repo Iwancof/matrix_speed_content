@@ -10,8 +10,14 @@ matrix* allocate_matrix() {
 
   alignment = sizeof(matrix);
 mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+
+  if(mapped == 0) {
+    perror("allocation error");
+  }
+
   target = (matrix*)(((mapped - 1) & ~(alignment - 1)) + alignment);
   // TODO: munmap unused chunks
+
 
   for(size_t x = 0; x < SUPER_SIZE;x++) {
     for(size_t y = 0; y < SUPER_SIZE;y++) {
@@ -24,6 +30,17 @@ mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS
   }
 
   return target;
+}
+
+block* allocate_block() {
+  block* ret = NULL;
+
+  if(posix_memalign((void**)&ret, BLOCK_SIZE * BLOCK_SIZE, sizeof(block))) {
+    perror("allocation error");
+  }
+
+  return ret;
+
 }
 
 void show_matrix(matrix *mat) {
@@ -41,8 +58,8 @@ void show_matrix(matrix *mat) {
 }
 
 void show_block(block *blk) {
-  for(unsigned short y = 0;y < BLOCK_SIZE;y++) {
-    for(unsigned short x = 0; x < BLOCK_SIZE;x++) {
+  for(INDEX_TYPE y = 0;y < BLOCK_SIZE;y++) {
+    for(INDEX_TYPE x = 0; x < BLOCK_SIZE;x++) {
       printf("%3.3f ", blk->element[y][x]);
     }
     puts("");

@@ -1,11 +1,12 @@
 CC := gcc
 PYTHON := python3
 OBJS := main.o matrix.o
-CFLAGS := -W -Wall -Wextra
+CFLAGS := -W -Wall -Wextra -fopenmp -O3
 
-TEST_CFLAGS := $(CFLAGS) -lcunit -O3
+TEST_CFLAGS := $(CFLAGS) -lcunit -g3
 
 main: $(OBJS)
+	$(CC) $^ $(CFLAGS) -o $@
 
 block_test_value:
 	$(PYTHON) ./gen_block_test_value.py
@@ -14,7 +15,7 @@ matrix_test_value:
 	$(PYTHON) ./matrix_block_test_value.py
 
 unit_tests: unit_tests.c matrix.c matrix.h block_test_value matrix_test_value
-	$(CC) unit_tests.c matrix.c matrix.h $(TEST_CFLAGS) -o $@
+	$(CC) unit_tests.c matrix.c $(TEST_CFLAGS) -o $@
 
 $(OBJS): matrix.h
 

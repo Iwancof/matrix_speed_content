@@ -1,12 +1,16 @@
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
+#define INDEX_TYPE unsigned short
+
+#define PARALLEL 16
 
 #define BLOCK_SIZE 0x10
 // #define MATRIX_SIZE 0x20000000
-#define MATRIX_SIZE 0x400
+#define MATRIX_SIZE 0x1000
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
 #define DOC(ignore)
@@ -28,6 +32,7 @@ typedef struct {
 } matrix;
 
 matrix *allocate_matrix();
+block *allocate_block();
 
 /// ASSUME: mat has been initialized.
 void show_matrix(matrix *mat);
@@ -44,9 +49,9 @@ void show_block(block *blk);
     DOC(__builtin_prefetch(&(left)->element, 0))                               \
     DOC(__builtin_prefetch(&(right)->element, 0))                              \
     DOC(__builtin_prefetch(&(dest)->element, 1))                               \
-    for (unsigned short width = 0; width < BLOCK_SIZE; width++) {              \
-      for (unsigned short height = 0; height < BLOCK_SIZE; height++) {         \
-        for (unsigned short index = 0; index < BLOCK_SIZE; index++) {          \
+    for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {               \
+      for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {                \
+        for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {              \
           (dest)->element[height][width] +=                                    \
               (left)->element[height][index] * (right)->element[index][width]; \
         }                                                                      \
@@ -57,10 +62,46 @@ void show_block(block *blk);
 /// ASSUME: left, right, dest has been allocated.
 /// ASSUME: dest has been initialized.
 
-static inline void matrix_mult(matrix *left, matrix *right, matrix *dest) {
-  for (size_t y = 0; y < SUPER_SIZE; y++) {
-    for (size_t x = 0; x < SUPER_SIZE; x++) {
-      for (size_t i = 0; i < SUPER_SIZE; i++) {
+static inline void matrix_mult_per_block(matrix *left, matrix *right,
+                                         matrix *dest,
+                                         matrix *thread_memo[PARALLEL]) {
+  INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
+
+#pragma omp parallel for num_threads(PARALLEL) schedule(static)
+  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    int thread_index = omp_get_thread_num();
+    matrix *thread_dest = thread_memo[thread_index];
+    for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
+         cache_block_y++) { // for write cache
+      for (move = 0; move < SUPER_SIZE; move++) {
+        BLOCK_MULT(&left->blocks[cache_block_y][cache_block_x],
+                   &right->blocks[cache_block_x][move],
+                   &thread_dest->blocks[cache_block_y][move]);
+      }
+    }
+  }
+
+#pragma omp parallel for num_threads(PARALLEL)
+  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
+      block *dest_block = &dest->blocks[cache_block_y][cache_block_x];
+      for (int i = 0; i < PARALLEL; i++) {
+        block* from = &thread_memo[i]->blocks[cache_block_y][cache_block_x];
+        for (block_x = 0; block_x < BLOCK_SIZE; block_x++) {
+          for (block_y = 0; block_y < BLOCK_SIZE; block_y++) {
+            dest_block->element[block_y][block_x] += from->element[block_y][block_x];
+          }
+        }
+      }
+    }
+  }
+}
+
+static inline void matrix_mult_vanilla(matrix *left, matrix *right,
+                                       matrix *dest) {
+  for (INDEX_TYPE x = 0; x < SUPER_SIZE; x++) {
+    for (INDEX_TYPE y = 0; y < SUPER_SIZE; y++) {
+      for (INDEX_TYPE i = 0; i < SUPER_SIZE; i++) {
         BLOCK_MULT(&left->blocks[y][i], &right->blocks[i][x],
                    &dest->blocks[y][x]);
       }

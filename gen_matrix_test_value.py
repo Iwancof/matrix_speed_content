@@ -2,12 +2,18 @@ import numpy as np
 
 np.random.seed(0)
 
-size = 0x400
+size = 0x1000
 
 left = np.random.rand(size, size)
 right = np.random.rand(size, size)
 
 dest = left @ right
+
+print(left)
+print(right)
+
+print(dest)
+
 
 f = open("./matrix_test_value", "w")
 
@@ -22,10 +28,4 @@ for per_y in dest:
         f.write(f"{element},")
 
 f.close()
-
-print(left)
-print(right)
-
-print(dest)
-
 

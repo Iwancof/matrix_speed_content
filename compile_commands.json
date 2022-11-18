@@ -1,10 +1,11 @@
 [
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/opt/cuda/bin/gcc",
       "-W",
       "-Wall",
       "-Wextra",
+      "-fopenmp",
       "-c",
       "-o",
       "main.o",
@@ -16,10 +17,11 @@
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/opt/cuda/bin/gcc",
       "-W",
       "-Wall",
       "-Wextra",
+      "-fopenmp",
       "-c",
       "-o",
       "matrix.o",

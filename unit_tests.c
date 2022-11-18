@@ -16,8 +16,8 @@ int main() {
 
   suite = CU_add_suite("Block matrix test", NULL, NULL);
 
-  CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
-  CU_add_test(suite, "Block mult random test", block_mult_random_test);
+  // CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
+  // CU_add_test(suite, "Block mult random test", block_mult_random_test);
   CU_add_test(suite, "Matrix mult random test", matrix_mult_random_test);
 
   CU_console_run_tests();
@@ -28,7 +28,7 @@ int main() {
 
 void block_mult_unit_test() {
   block *left, *right, *dest;
-  unsigned short x, y;
+  INDEX_TYPE x, y;
 
   left = NULL;
   right = NULL;
@@ -83,8 +83,8 @@ void block_mult_random_test() {
   FILE *f;
   char *content_ptr, *token, *context;
   size_t read, line_index;
-  double value_buf;
-  unsigned short i, x, y;
+  INNER_TYPE value_buf;
+  INDEX_TYPE i, x, y;
   block *blocks[4];
 
   for(i = 0;i < 4;i++) {
@@ -131,8 +131,13 @@ void matrix_mult_random_test() {
 
   size_t line_index = 0;
   char *context, *token;
-  matrix *matries[4];
 
+  matrix *thread_memo[PARALLEL];
+  for(int i = 0;i < PARALLEL;i++) {
+    thread_memo[i] = allocate_matrix();
+  }
+
+  matrix *matries[4];
   for(int i = 0;i < 4;i++) {
     matries[i] = allocate_matrix();
   }
@@ -154,7 +159,7 @@ void matrix_mult_random_test() {
     token = strtok_r(NULL, ",", &context);
   }
 
-  matrix_mult(matries[0], matries[1], matries[3]);
+  matrix_mult_per_block(matries[0], matries[1], matries[3], thread_memo);
 
   size_t block_x, block_y, elm_x, elm_y;
   for_each_blocks(block_x, block_y) {
