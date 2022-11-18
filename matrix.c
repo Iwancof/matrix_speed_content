@@ -9,9 +9,7 @@ matrix* allocate_matrix() {
   matrix* target;
 
   alignment = sizeof(matrix);
-
-  mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-
+mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
   target = (matrix*)(((mapped - 1) & ~(alignment - 1)) + alignment);
   // TODO: munmap unused chunks
 
@@ -26,7 +24,6 @@ matrix* allocate_matrix() {
   }
 
   return target;
-
 }
 
 void show_matrix(matrix *mat) {
@@ -35,11 +32,19 @@ void show_matrix(matrix *mat) {
       size_t block_h_index = i / BLOCK_SIZE;
       size_t block_w_index = j / BLOCK_SIZE;
       size_t in_block_h = i % BLOCK_SIZE;
-      size_t in_block_w = i % BLOCK_SIZE;
+      size_t in_block_w = j % BLOCK_SIZE;
 
-      printf("%.10f ", mat->blocks[block_h_index][block_w_index].element[in_block_h][in_block_w]);
+      printf("%2.2f ", mat->blocks[block_h_index][block_w_index].element[in_block_h][in_block_w]);
     }
     printf("\n");
   }
 }
 
+void show_block(block *blk) {
+  for(unsigned short y = 0;y < BLOCK_SIZE;y++) {
+    for(unsigned short x = 0; x < BLOCK_SIZE;x++) {
+      printf("%3.3f ", blk->element[y][x]);
+    }
+    puts("");
+  }
+}

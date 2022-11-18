@@ -5,9 +5,13 @@
 
 int main() {
   matrix *mat = allocate_matrix();
-  printf("%p\n", mat);
 
-  puts("created");
+  for_each_blocks(mat, this, {
+      this->element[0][1] = 0.1;
+      printf("%p\n", this);
+  });
+
+  show_matrix(mat);
 
   return 0;
 }
