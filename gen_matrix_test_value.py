@@ -2,7 +2,7 @@ import numpy as np
 
 np.random.seed(0)
 
-size = 0x400
+size = 0x200
 
 left = np.random.rand(size, size)
 right = np.random.rand(size, size)

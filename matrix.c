@@ -5,7 +5,7 @@
 #include "matrix.h"
 
 matrix* allocate_matrix() { 
-  size_t mapped, alignment;
+  size_t mapped, alignment, length;
   matrix* target;
 
   alignment = sizeof(matrix);
@@ -16,16 +16,21 @@ mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS
   }
 
   target = (matrix*)(((mapped - 1) & ~(alignment - 1)) + alignment);
-  // TODO: munmap unused chunks
 
+  length = (size_t)target - mapped; 
+  if(length) {
+    munmap((void*)mapped, length);
+  }
 
-  for(size_t x = 0; x < SUPER_SIZE;x++) {
-    for(size_t y = 0; y < SUPER_SIZE;y++) {
-      for(size_t bx = 0; bx < BLOCK_SIZE;bx++) {
-        for(size_t by = 0; by < BLOCK_SIZE;by++) {
-          target->blocks[x][y].element[bx][by] = 0.;
-        }
-      }
+  length = (mapped + alignment * 2) - (size_t)(target + 1);
+  if(length) {
+    munmap((void*)(target + 1), length);
+  }
+
+  size_t x, y, bx, by;
+  for_each_blocks(x, y) {
+    for_each_element(bx, by) {
+      target->blocks[y][x].element[by][bx] = 0.;
     }
   }
 

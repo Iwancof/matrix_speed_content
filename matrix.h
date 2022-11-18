@@ -9,8 +9,7 @@
 #define PARALLEL 16
 
 #define BLOCK_SIZE 0x10
-// #define MATRIX_SIZE 0x20000000
-#define MATRIX_SIZE 0x1000
+#define MATRIX_SIZE 0x200
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
 #define DOC(ignore)
