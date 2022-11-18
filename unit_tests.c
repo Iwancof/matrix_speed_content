@@ -82,7 +82,7 @@ void block_mult_unit_test() {
 void block_mult_random_test() {
   FILE *f;
   char *content_ptr, *token, *context;
-  size_t read, line_index;
+  size_t file_size, read, line_index;
   INNER_TYPE value_buf;
   INDEX_TYPE i, x, y;
   block *blocks[4];
@@ -94,10 +94,14 @@ void block_mult_random_test() {
   f = fopen("block_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
-  content_ptr = (char*)malloc(0x10000); // TODO: use file size.
+  fseek(f, 0, SEEK_END);
+  file_size = (size_t)ftell(f);
+  fseek(f, 0, SEEK_SET);
 
-  read = fread(content_ptr, sizeof(char), 0x10000, f);
-  CU_ASSERT_NOT_EQUAL(read, 0x10000);
+  content_ptr = (char*)malloc(file_size);
+
+  read = fread(content_ptr, sizeof(char), file_size, f);
+  CU_ASSERT_EQUAL(read, file_size);
 
   line_index = 0;
   token = strtok_r(content_ptr, ",", &context);
@@ -118,6 +122,7 @@ void block_mult_random_test() {
 
 void matrix_mult_random_test() {
   FILE *f = fopen("matrix_test_value", "r");
+  CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);
   size_t file_size = (size_t)ftell(f);

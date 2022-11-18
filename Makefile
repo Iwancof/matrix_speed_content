@@ -37,7 +37,7 @@ inner_docker_main: inner_docker_main.o inner_docker_matrix.o
 inner_docker_unit_tests.o: unit_tests.c matrix.h
 	$(DOCKER_CC) unit_tests.c $(COMMON_CFLAGS) $(DOCKER_ICX_FLAGS) -c -o $@
 inner_docker_tests: inner_docker_matrix.o inner_docker_unit_tests.o block_test_value matrix_test_value
-	$(DOCKER_CC) host_matrix.o host_unit_tests.o $(COMMON_CFLAGS) $(DOCKER_ICX_FLAGS) $(TEST_CFLAGS) -o docker_tests
+	$(DOCKER_CC) inner_docker_matrix.o inner_docker_unit_tests.o $(COMMON_CFLAGS) $(DOCKER_ICX_FLAGS) $(TEST_CFLAGS) -o docker_tests
 
 docker_main: main.c matrix.c matrix.h
 	docker exec $(CONTAINER_NAME) make -C /project inner_docker_main
