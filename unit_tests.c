@@ -86,7 +86,7 @@ void block_mult_unit_test() {
 void block_mult_random_test() {
   FILE *f;
   char *content_ptr, *token, *context;
-  size_t file_size, read, line_index;
+  size_t file_size, read, index;
   INNER_TYPE value_buf;
   INDEX_TYPE i, x, y;
   block *blocks[4];
@@ -94,7 +94,6 @@ void block_mult_random_test() {
   for(i = 0;i < 4;i++) {
     blocks[i] = allocate_block();
   }
-
   f = fopen("block_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
@@ -107,20 +106,24 @@ void block_mult_random_test() {
   read = fread(content_ptr, sizeof(char), file_size, f);
   CU_ASSERT_EQUAL(read, file_size);
 
-  line_index = 0;
+  index = 0;
   token = strtok_r(content_ptr, ",", &context);
-  while(token != NULL) {
+  while(token != NULL && index < BLOCK_SIZE * BLOCK_SIZE) {
     value_buf = atof(token);
-    blocks[line_index / (BLOCK_SIZE * BLOCK_SIZE)]->element[(line_index % (BLOCK_SIZE * BLOCK_SIZE)) / BLOCK_SIZE][(line_index % (BLOCK_SIZE * BLOCK_SIZE)) % BLOCK_SIZE] = value_buf;
+    blocks[index / (BLOCK_SIZE * BLOCK_SIZE)]->element[(index % (BLOCK_SIZE * BLOCK_SIZE)) / BLOCK_SIZE][(index % (BLOCK_SIZE * BLOCK_SIZE)) % BLOCK_SIZE] = value_buf;
 
-    line_index++;
+    index++;
     token = strtok_r(NULL, ",", &context);
   }
 
   BLOCK_MULT(blocks[0], blocks[1], blocks[3]);
 
   for_each_element(x, y) {
-    CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.01);
+    if(blocks[2]->element[y][x] - blocks[3]->element[y][x] <= -0.1) {
+      printf("\n%lf, %lf\n", blocks[2]->element[y][x], blocks[3]->element[y][x]);
+      printf("at %d, %d\n", x, y);
+    }
+    CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.1);
   }
 
   for(i = 0;i < 4;i++) {
@@ -143,7 +146,7 @@ void matrix_mult_random_test() {
   size_t read = fread(content_ptr, sizeof(char), file_size, f);
   CU_ASSERT_EQUAL(file_size, read);
 
-  size_t line_index = 0;
+  size_t index = 0;
   char *context, *token;
 
   matrix *thread_memo[PARALLEL];
@@ -157,11 +160,11 @@ void matrix_mult_random_test() {
   }
 
   token = strtok_r(content_ptr, ",", &context);
-  while(token != NULL) {
+  while(token != NULL && index < MATRIX_SIZE * MATRIX_SIZE) {
     INNER_TYPE value_buf = atof(token);
 
-    size_t matrix_index = line_index / (MATRIX_SIZE * MATRIX_SIZE);
-    size_t matrix_offset = line_index % (MATRIX_SIZE * MATRIX_SIZE);
+    size_t matrix_index = index / (MATRIX_SIZE * MATRIX_SIZE);
+    size_t matrix_offset = index % (MATRIX_SIZE * MATRIX_SIZE);
     size_t block_y = matrix_offset / MATRIX_SIZE / BLOCK_SIZE;
     size_t block_x = matrix_offset % MATRIX_SIZE / BLOCK_SIZE;
     size_t in_block_y = matrix_offset / MATRIX_SIZE % BLOCK_SIZE;
@@ -169,7 +172,7 @@ void matrix_mult_random_test() {
 
     matries[matrix_index]->blocks[block_y][block_x].element[in_block_y][in_block_x] = value_buf;
 
-    line_index += 1;
+    index += 1;
     token = strtok_r(NULL, ",", &context);
   }
 
