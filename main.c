@@ -7,14 +7,14 @@
 int main() {
   srand(0);
 
-  matrix *left = allocate_matrix();
-  matrix *right = allocate_matrix();
-  matrix *dest1 = allocate_matrix();
+  matrix *left = map_matrix();
+  matrix *right = map_matrix();
+  matrix *dest1 = map_matrix();
   // matrix *dest2 = allocate_matrix();
 
   matrix *thread_memo[PARALLEL];
   for(int i = 0;i < PARALLEL;i++) {
-    thread_memo[i] = allocate_matrix();
+    thread_memo[i] = map_matrix();
   }
 
   INDEX_TYPE x, y, bx, by;
@@ -46,6 +46,14 @@ int main() {
   end = omp_get_wtime();
   printf("elapsed %f\n", end - start);
   */
+
+  unmap_matrix(left);
+  unmap_matrix(right);
+  unmap_matrix(dest1);
+
+  for(int i = 0;i < PARALLEL;i++) {
+    unmap_matrix(thread_memo[i]);
+  }
 
   return 0;
 }

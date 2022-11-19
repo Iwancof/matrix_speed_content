@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #pragma clang loop unroll(full)
+
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
 #define INDEX_TYPE unsigned short
@@ -9,7 +11,7 @@
 #define PARALLEL 16
 
 #define BLOCK_SIZE 0x10
-#define MATRIX_SIZE 0x200
+#define MATRIX_SIZE 0x1000
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
 #define DOC(ignore)
@@ -30,8 +32,10 @@ typedef struct {
   block blocks[SUPER_SIZE][SUPER_SIZE]; // TODO: Replace with L2 cache.
 } matrix;
 
-matrix *allocate_matrix();
+matrix *map_matrix();
+void unmap_matrix(matrix *mat);
 block *allocate_block();
+void free_block(block *blk);
 
 /// ASSUME: mat has been initialized.
 void show_matrix(matrix *mat);
@@ -51,6 +55,7 @@ void show_block(block *blk);
     for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {               \
       for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {                \
         for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {              \
+                                                                               \
           (dest)->element[height][width] +=                                    \
               (left)->element[height][index] * (right)->element[index][width]; \
         }                                                                      \
@@ -66,7 +71,8 @@ static inline void matrix_mult_per_block(matrix *left, matrix *right,
                                          matrix *thread_memo[PARALLEL]) {
   INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
 
-#pragma omp parallel for num_threads(PARALLEL) schedule(static)
+#pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
+    schedule(static)
   for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
     int thread_index = omp_get_thread_num();
     matrix *thread_dest = thread_memo[thread_index];
@@ -80,7 +86,8 @@ static inline void matrix_mult_per_block(matrix *left, matrix *right,
     }
   }
 
-#pragma omp parallel for num_threads(PARALLEL)
+#pragma omp parallel for private(cache_block_x, block_x, block_y)              \
+    num_threads(PARALLEL) schedule(static)
   for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
     for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
       block *dest_block = &dest->blocks[cache_block_y][cache_block_x];
@@ -97,6 +104,7 @@ static inline void matrix_mult_per_block(matrix *left, matrix *right,
   }
 }
 
+/*
 static inline void matrix_mult_vanilla(matrix *left, matrix *right,
                                        matrix *dest) {
   for (INDEX_TYPE x = 0; x < SUPER_SIZE; x++) {
@@ -108,3 +116,4 @@ static inline void matrix_mult_vanilla(matrix *left, matrix *right,
     }
   }
 }
+*/

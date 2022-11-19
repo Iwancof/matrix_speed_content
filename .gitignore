@@ -1,0 +1,6 @@
+/*.o
+/*.json
+/.ccls-cache
+/block_test_value
+/matrix_test_value
+/compile-commands.json

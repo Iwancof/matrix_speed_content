@@ -4,11 +4,11 @@ PYTHON := python3
 CONTAINER_NAME := icc
 OBJS := main.o matrix.o
 LINKER := mold
+ 
+COMMON_CFLAGS := -W -Wall -Wextra -O3 -msse -msse2 -mavx
 
-COMMON_CFLAGS := -W -Wall -Wextra -O3
-
-HOST_GCC_CFLAGS := -fopenmp
-DOCKER_ICX_FLAGS := -fiopenmp
+HOST_GCC_CFLAGS := -fopenmp -funroll-all-loops
+DOCKER_ICX_FLAGS := -fiopenmp -fopenmp
 
 TEST_CFLAGS := $(CFLAGS) -lcunit -ggdb3
 

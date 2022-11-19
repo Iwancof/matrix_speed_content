@@ -5,15 +5,20 @@
       "-W",
       "-Wall",
       "-Wextra",
+      "-O3",
+      "-mmmx",
+      "-msse2",
+      "-mavx",
       "-fopenmp",
+      "-funroll-all-loops",
       "-c",
       "-o",
-      "main.o",
+      "host_main.o",
       "main.c"
     ],
     "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
     "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.c",
-    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.o"
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_main.o"
   },
   {
     "arguments": [
@@ -21,14 +26,19 @@
       "-W",
       "-Wall",
       "-Wextra",
+      "-O3",
+      "-mmmx",
+      "-msse2",
+      "-mavx",
       "-fopenmp",
+      "-funroll-all-loops",
       "-c",
       "-o",
-      "matrix.o",
+      "host_matrix.o",
       "matrix.c"
     ],
     "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
     "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/matrix.c",
-    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/matrix.o"
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_matrix.o"
   }
 ]

@@ -34,9 +34,9 @@ void block_mult_unit_test() {
   right = NULL;
   dest = NULL;
 
-  posix_memalign((void**)&left, BLOCK_SIZE * BLOCK_SIZE, sizeof(block));
-  posix_memalign((void**)&right, BLOCK_SIZE * BLOCK_SIZE, sizeof(block));
-  posix_memalign((void**)&dest, BLOCK_SIZE * BLOCK_SIZE, sizeof(block));
+  left = allocate_block();
+  right = allocate_block();
+  dest = allocate_block();
 
   for_each_element(x, y) {
     if(x == y) {
@@ -77,6 +77,10 @@ void block_mult_unit_test() {
       CU_ASSERT_DOUBLE_EQUAL(dest->element[y][x], 0., 0.01);
     }
   }
+
+  free_block(left);
+  free_block(right);
+  free_block(dest);
 }
 
 void block_mult_random_test() {
@@ -88,7 +92,7 @@ void block_mult_random_test() {
   block *blocks[4];
 
   for(i = 0;i < 4;i++) {
-    posix_memalign((void**)&blocks[i], BLOCK_SIZE * BLOCK_SIZE, sizeof(block));
+    blocks[i] = allocate_block();
   }
 
   f = fopen("block_test_value", "r");
@@ -118,6 +122,11 @@ void block_mult_random_test() {
   for_each_element(x, y) {
     CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.01);
   }
+
+  for(i = 0;i < 4;i++) {
+    free_block(blocks[i]);
+  }
+  free(content_ptr);
 }
 
 void matrix_mult_random_test() {
@@ -139,17 +148,17 @@ void matrix_mult_random_test() {
 
   matrix *thread_memo[PARALLEL];
   for(int i = 0;i < PARALLEL;i++) {
-    thread_memo[i] = allocate_matrix();
+    thread_memo[i] = map_matrix();
   }
 
   matrix *matries[4];
   for(int i = 0;i < 4;i++) {
-    matries[i] = allocate_matrix();
+    matries[i] = map_matrix();
   }
 
   token = strtok_r(content_ptr, ",", &context);
   while(token != NULL) {
-    double value_buf = atof(token);
+    INNER_TYPE value_buf = atof(token);
 
     size_t matrix_index = line_index / (MATRIX_SIZE * MATRIX_SIZE);
     size_t matrix_offset = line_index % (MATRIX_SIZE * MATRIX_SIZE);
@@ -176,4 +185,14 @@ void matrix_mult_random_test() {
         );
     }
   }
+
+  for(int i = 0;i < PARALLEL;i++) {
+    unmap_matrix(thread_memo[i]);
+  }
+
+  for(int i = 0;i < 4;i++) {
+    unmap_matrix(matries[i]);
+  }
+
+  free(content_ptr);
 }
