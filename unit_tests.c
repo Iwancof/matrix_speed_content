@@ -108,7 +108,7 @@ void block_mult_random_test() {
 
   index = 0;
   token = strtok_r(content_ptr, ",", &context);
-  while(token != NULL && index < BLOCK_SIZE * BLOCK_SIZE) {
+  while(token != NULL && index < 3 * BLOCK_SIZE * BLOCK_SIZE) {
     value_buf = atof(token);
     blocks[index / (BLOCK_SIZE * BLOCK_SIZE)]->element[(index % (BLOCK_SIZE * BLOCK_SIZE)) / BLOCK_SIZE][(index % (BLOCK_SIZE * BLOCK_SIZE)) % BLOCK_SIZE] = value_buf;
 
@@ -119,11 +119,7 @@ void block_mult_random_test() {
   BLOCK_MULT(blocks[0], blocks[1], blocks[3]);
 
   for_each_element(x, y) {
-    if(blocks[2]->element[y][x] - blocks[3]->element[y][x] <= -0.1) {
-      printf("\n%lf, %lf\n", blocks[2]->element[y][x], blocks[3]->element[y][x]);
-      printf("at %d, %d\n", x, y);
-    }
-    CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.1);
+    CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.01);
   }
 
   for(i = 0;i < 4;i++) {
@@ -160,7 +156,7 @@ void matrix_mult_random_test() {
   }
 
   token = strtok_r(content_ptr, ",", &context);
-  while(token != NULL && index < MATRIX_SIZE * MATRIX_SIZE) {
+  while(token != NULL && index < 3 * MATRIX_SIZE * MATRIX_SIZE) {
     INNER_TYPE value_buf = atof(token);
 
     size_t matrix_index = index / (MATRIX_SIZE * MATRIX_SIZE);
