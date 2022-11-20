@@ -10,3 +10,7 @@
 /profile
 /bench
 /__pycache__
+/html
+/latex
+/doxygen_conf
+
