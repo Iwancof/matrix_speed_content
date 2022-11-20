@@ -1,6 +1,11 @@
 /*.o
 /*.json
 /.ccls-cache
+/.ccls
+/.gdb_history
 /block_test_value
 /matrix_test_value
 /compile-commands.json
+/profile
+/bench
+/__pycache__

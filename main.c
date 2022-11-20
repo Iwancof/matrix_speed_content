@@ -4,8 +4,17 @@
 
 #include "matrix.h"
 
+int inner_main();
+
 int main() {
   srand(0);
+
+  for(int i = 0;i < 10;i++) {
+    inner_main();
+  }
+}
+
+int inner_main() {
 
   matrix *left = map_matrix();
   matrix *right = map_matrix();
@@ -29,11 +38,10 @@ int main() {
     }
   }
 
-  puts("created");
+  left_pre_matrix(right); // not needed for benchmark
 
   double start, end;
 
-  puts("per block");
   start = omp_get_wtime();
   matrix_mult_per_block(left, right, dest1, thread_memo);
   end = omp_get_wtime();

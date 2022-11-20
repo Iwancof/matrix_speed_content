@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 
+#include <x86intrin.h>
+
 #include "matrix.h"
+
+#define IGNORE_UNUSED(x) (void)(x)
 
 // TODO: assuming `sizeof(matrix)` is page aligned is not good.
 matrix *map_matrix() {
@@ -21,8 +26,8 @@ matrix *map_matrix() {
 
   length = (size_t)target - mapped;
   if (length) {
-    int ret = munmap((void*)mapped, length);
-    if(ret) {
+    int ret = munmap((void *)mapped, length);
+    if (ret) {
       perror("munmap error 1");
     }
   }
@@ -30,12 +35,12 @@ matrix *map_matrix() {
   length = (mapped + alignment * 2) - (size_t)(target + 1);
   if (length) {
     int ret = munmap((void *)(target + 1), length);
-    if(ret) {
+    if (ret) {
       perror("munmap error 2");
     }
   }
 
-  printf("allocated %p\n", target);
+  // printf("allocated %p\n", target);
 
   size_t x, y, bx, by;
   for_each_blocks(x, y) {
@@ -49,10 +54,13 @@ void unmap_matrix(matrix *mat) { munmap((void *)mat, sizeof(matrix)); }
 
 block *allocate_block() {
   block *ret = NULL;
+  INDEX_TYPE x, y;
 
   if (posix_memalign((void **)&ret, BLOCK_SIZE * BLOCK_SIZE, sizeof(block))) {
     perror("allocation error");
   }
+
+  for_each_element(x, y) { ret->element[y][x] = 0.; }
 
   return ret;
 }
@@ -82,3 +90,94 @@ void show_block(block *blk) {
     puts("");
   }
 }
+
+void left_pre_block(block *blk) {
+  IGNORE_UNUSED(blk);
+#ifdef LEFT_TRANSPOSE
+  for (INDEX_TYPE x = 1; x < BLOCK_SIZE; x++) { // BLOCK_SIZE is not zero.
+    for (INDEX_TYPE y = 0; y < x; y++) {
+      double tmp = blk->element[y][x];
+      blk->element[y][x] = blk->element[x][y];
+      blk->element[x][y] = tmp;
+    }
+  }
+#endif
+}
+
+void left_pre_matrix(matrix *mat) {
+  IGNORE_UNUSED(mat);
+#ifdef LEFT_TRANSPOSE
+  INDEX_TYPE x, y;
+  for_each_blocks(x, y) { left_pre_block(&mat->blocks[y][x]); }
+
+  block *tmp = allocate_block();
+  for (x = 1; x < SUPER_SIZE; x++) {
+    for (y = 0; y < x; y++) {
+      memcpy(tmp, &mat->blocks[y][x], sizeof(block));
+      memcpy(&mat->blocks[y][x], &mat->blocks[x][y], sizeof(block));
+      memcpy(&mat->blocks[x][y], tmp, sizeof(block));
+    }
+  }
+
+  free_block(tmp);
+#endif
+}
+
+#ifdef BLOCK_MULT_FUNC
+
+void BLOCK_MULT(block *left, block *right, block *dest) {
+  DOC(TODO : replace fast algorithm)
+  DOC(__builtin_prefetch(&(left)->element, 0))
+  DOC(__builtin_prefetch(&(right)->element, 0))
+  DOC(__builtin_prefetch(&(dest)->element, 1))
+
+#ifdef LEFT_TRANSPOSE
+  for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
+    for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {
+      for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {
+        dest->element[width][height] +=
+            left->element[height][index] * right->element[width][index];
+      }
+    }
+  }
+#else  // LEFT_TRANSPOSE
+  for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {
+    for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
+      for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {
+        dest->element[height][width] +=
+            left->element[height][index] * right->element[index][width];
+      }
+    }
+  }
+#endif // LEFT_TRANSPOSE
+}
+
+/*
+void BLOCK_MULT(block *left, block *right, block *dest) {
+  DOC(TODO : replace fast algorithm)
+  DOC(__builtin_prefetch(&(left)->element, 0))
+  DOC(__builtin_prefetch(&(right)->element, 0))
+  DOC(__builtin_prefetch(&(dest)->element, 1))
+
+  puts("");
+
+  for(INDEX_TYPE left_y = 0;left_y < BLOCK_SIZE;) {
+    INDEX_TYPE right_x = 0;
+
+    SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][0]);
+
+    for(;right_x < BLOCK_SIZE;right_x++) {
+    }
+
+    left_y += 1;
+    right_x -= 1;
+
+    for(;0 <= right_x;right_x--) {
+    }
+
+    left_y += 1;
+  }
+}
+*/
+
+#endif

@@ -1,8 +1,9 @@
 import numpy as np
+from load_header import settings
 
 np.random.seed(0)
 
-size = 0x10
+size = settings["BLOCK_SIZE"]
 
 left = np.random.rand(size, size)
 right = np.random.rand(size, size)
