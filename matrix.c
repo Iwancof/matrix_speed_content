@@ -124,11 +124,12 @@ void left_pre_matrix(matrix *mat) {
 
 #ifdef BLOCK_MULT_FUNC
 
-void BLOCK_MULT(block *left, block *right, block *dest) {
+void BLOCK_MULT(block *const restrict left, block *const restrict right,
+                block *restrict dest) {
   DOC(TODO : replace fast algorithm)
-  DOC(__builtin_prefetch(&(left)->element, 0))
-  DOC(__builtin_prefetch(&(right)->element, 0))
-  DOC(__builtin_prefetch(&(dest)->element, 1))
+  DOC(__builtin_prefetch(&(left)->element, 0);)
+  DOC(__builtin_prefetch(&(right)->element, 0);)
+  DOC(__builtin_prefetch(&(dest)->element, 1);)
 
 #ifdef LEFT_TRANSPOSE
 

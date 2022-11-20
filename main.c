@@ -10,7 +10,8 @@ int inner_main_block_test();
 int main() {
   srand(0);
 
-  inner_main_block_test();
+  // inner_main_block_test();
+  inner_main();
 }
 
 int inner_main_block_test() {
@@ -62,12 +63,14 @@ int inner_main() {
 
   left_pre_matrix(right); // not needed for benchmark
 
+  puts("[+] matrix allocated!");
+
   double start, end;
 
   start = omp_get_wtime();
   matrix_mult_per_block(left, right, dest1, thread_memo);
   end = omp_get_wtime();
-  printf("elapsed %f\n", end - start);
+  printf("[+] elapsed %f\n", end - start);
 
   /*
   puts("vanilla");

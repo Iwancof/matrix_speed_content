@@ -93,9 +93,9 @@ void BLOCK_MULT(block *left, block *right, block *dest);
 /// ASSUME: left, right, dest has been allocated.
 /// ASSUME: dest has been initialized.
 
-static inline void matrix_mult_per_block(matrix *left, matrix *right,
-                                         matrix *dest,
-                                         matrix *thread_memo[PARALLEL]) {
+static inline void matrix_mult_per_block(matrix *const restrict left, matrix *const restrict right,
+                                         matrix *restrict dest,
+                                         matrix *restrict thread_memo[PARALLEL]) {
   INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
 
 #ifdef LEFT_TRANSPOSE
@@ -106,14 +106,16 @@ static inline void matrix_mult_per_block(matrix *left, matrix *right,
        cache_block_y++) { // for write cache
     int thread_index = omp_get_thread_num();
     matrix *thread_dest = thread_memo[thread_index];
-    for (move = 0; move < SUPER_SIZE; move++) {
-      for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
-        BLOCK_MULT(&left->blocks[cache_block_y][cache_block_x],
-                   &right->blocks[move][cache_block_x],
-                   &thread_dest->blocks[move][cache_block_y]);
+    for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+      for (move = 0; move < SUPER_SIZE; move++) {
+        BLOCK_MULT(&left->blocks[cache_block_y][move],
+                   &right->blocks[cache_block_x][move],
+                   &thread_dest->blocks[cache_block_x][cache_block_y]);
       }
     }
   }
+
+  puts("reducting");
 
 #pragma omp parallel for private(cache_block_x, block_x, block_y)              \
     num_threads(PARALLEL) schedule(static)

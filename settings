@@ -14,4 +14,4 @@
 #define SIMD_WIDTH (sizeof(SIMD_TYPE) / sizeof(INNER_TYPE))
 
 #define BLOCK_SIZE 0x10
-#define MATRIX_SIZE 0x10
+#define MATRIX_SIZE 0x1000
