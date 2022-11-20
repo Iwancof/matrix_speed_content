@@ -5,6 +5,7 @@
 /.gdb_history
 /block_test_value
 /matrix_test_value
+/matrix_transpose_value
 /compile-commands.json
 /profile
 /bench

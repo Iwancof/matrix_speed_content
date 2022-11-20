@@ -1,2 +1,16 @@
+#define BLOCK_MULT_FUNC
+#define LEFT_TRANSPOSE
+
+#define INNER_TYPE double
+#define CACHE_SIZE 0x100
+#define INDEX_TYPE short
+
+#define PARALLEL 0x10
+
+#define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
+
+#define SIMD_TYPE __m256d
+#define SIMD_WIDTH sizeof(SIMD_TYPE)
+
 #define BLOCK_SIZE 0x10
-#define MATRIX_SIZE 0x1000
+#define MATRIX_SIZE 0x100

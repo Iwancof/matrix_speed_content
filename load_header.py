@@ -7,8 +7,19 @@ with open("./settings", "r") as f:
 settings = {}
 
 for line in content.split('\n'):
-    m = re.match("#define (.*) (.*)", line)
+    m = re.match("#define (.*?) (.*)", line)
     if m:
-        settings[m.group(1)] = int(m.group(2), 16)
+        try:
+            val = int(m.group(2), 0x10)
+        except:
+            try:
+                val = m.group(2)
+            except:
+                val = None
 
-print(f"loaded settings {settings}")
+        settings[m.group(1)] = val
+
+# print(f"loaded settings {settings}")
+print("loaded settings")
+for key, val in settings.items():
+    print(f"{key} = {val}")

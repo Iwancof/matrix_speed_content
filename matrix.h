@@ -3,21 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BLOCK_MULT_FUNC
-#define LEFT_TRANSPOSE
-
-#define INNER_TYPE double
-#define CACHE_SIZE 0x100
-#define INDEX_TYPE short
-
-#define PARALLEL 16
-
 #include "settings"
-
-#define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
-
-#define SIMD_TYPE __m256d
-#define SIMD_WIDTH sizeof(SIMD_TYPE)
 
 #define DOC(ignore)
 
