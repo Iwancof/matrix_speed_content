@@ -1,5 +1,5 @@
 #define BLOCK_MULT_FUNC
-#define LEFT_TRANSPOSE
+// #define LEFT_TRANSPOSE
 
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100

@@ -7,6 +7,9 @@ with open("./settings", "r") as f:
 settings = {}
 
 for line in content.split('\n'):
+    if line.startswith('//'):
+        print(f'found ignore config. {line}')
+        continue
     m = re.match("#define (.*?) (.*)", line)
     if m:
         try:
@@ -22,4 +25,5 @@ for line in content.split('\n'):
 # print(f"loaded settings {settings}")
 print("loaded settings")
 for key, val in settings.items():
-    print(f"{key} = {val}")
+    # print(f"{key} = {val}")
+    pass
