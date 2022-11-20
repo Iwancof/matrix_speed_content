@@ -2,6 +2,8 @@
 #define LEFT_TRANSPOSE
 // #define USE_SIMD
 
+#define UNROLLED_SIMD
+
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
 #define INDEX_TYPE short
@@ -10,8 +12,9 @@
 
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
-#define SIMD_TYPE __m256d
-#define SIMD_WIDTH (sizeof(SIMD_TYPE) / sizeof(INNER_TYPE))
-
 #define BLOCK_SIZE 0x10
 #define MATRIX_SIZE 0x1000
+
+#define SIMD_TYPE __m256d
+#define SIMD_WIDTH (sizeof(SIMD_TYPE) / sizeof(INNER_TYPE))
+#define SIMD_PER_BLOCK (BLOCK_SIZE / SIMD_WIDTH)

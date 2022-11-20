@@ -46,7 +46,8 @@ void left_pre_matrix(matrix *mat);
 
 #ifdef BLOCK_MULT_FUNC
 
-void BLOCK_MULT(block *left, block *right, block *dest);
+void BLOCK_MULT(const block *const restrict left,
+                const block *const restrict right, block *const restrict dest);
 
 #else // BLOCK_MULT_FUNC
 
@@ -93,9 +94,9 @@ void BLOCK_MULT(block *left, block *right, block *dest);
 /// ASSUME: left, right, dest has been allocated.
 /// ASSUME: dest has been initialized.
 
-static inline void matrix_mult_per_block(matrix *const restrict left, matrix *const restrict right,
-                                         matrix *restrict dest,
-                                         matrix *restrict thread_memo[PARALLEL]) {
+static inline void matrix_mult_per_block(
+    const matrix *const restrict left, const matrix *const restrict right,
+    matrix *const restrict dest, matrix *const restrict thread_memo[PARALLEL]) {
   INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
 
 #ifdef LEFT_TRANSPOSE
@@ -104,8 +105,8 @@ static inline void matrix_mult_per_block(matrix *const restrict left, matrix *co
     schedule(static)
   for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
        cache_block_y++) { // for write cache
-    int thread_index = omp_get_thread_num();
-    matrix *thread_dest = thread_memo[thread_index];
+    const int thread_index = omp_get_thread_num();
+    matrix *const thread_dest = thread_memo[thread_index];
     for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
       for (move = 0; move < SUPER_SIZE; move++) {
         BLOCK_MULT(&left->blocks[cache_block_y][move],
@@ -119,11 +120,12 @@ static inline void matrix_mult_per_block(matrix *const restrict left, matrix *co
 
 #pragma omp parallel for private(cache_block_x, block_x, block_y)              \
     num_threads(PARALLEL) schedule(static)
-  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
-    for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
-      block *dest_block = &dest->blocks[cache_block_y][cache_block_x];
+  for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
+    for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+      block *const dest_block = &dest->blocks[cache_block_y][cache_block_x];
       for (int i = 0; i < PARALLEL; i++) {
-        block *from = &thread_memo[i]->blocks[cache_block_y][cache_block_x];
+        const block *const from =
+            &thread_memo[i]->blocks[cache_block_y][cache_block_x];
         for (block_x = 0; block_x < BLOCK_SIZE; block_x++) {
           for (block_y = 0; block_y < BLOCK_SIZE; block_y++) {
             dest_block->element[block_y][block_x] +=

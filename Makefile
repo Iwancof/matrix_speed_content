@@ -5,7 +5,7 @@ CONTAINER_NAME := icc
 OBJS := main.o matrix.o
 LINKER := mold
  
-COMMON_CFLAGS := -W -Wall -Wextra -Ofast -march=native -mtune=native
+COMMON_CFLAGS := -W -Wall -Wextra -march=native -mtune=native -Ofast
 
 HOST_GCC_CFLAGS := -fopenmp -funroll-all-loops -fuse-ld=mold -static-libgcc
 DOCKER_ICX_FLAGS := -fiopenmp

@@ -124,8 +124,9 @@ void left_pre_matrix(matrix *mat) {
 
 #ifdef BLOCK_MULT_FUNC
 
-void BLOCK_MULT(block *const restrict left, block *const restrict right,
-                block *restrict dest) {
+inline void BLOCK_MULT(const block *const restrict left,
+                       const block *const restrict right,
+                       block *const restrict dest) {
   DOC(TODO : replace fast algorithm)
   DOC(__builtin_prefetch(&(left)->element, 0);)
   DOC(__builtin_prefetch(&(right)->element, 0);)
@@ -134,30 +135,51 @@ void BLOCK_MULT(block *const restrict left, block *const restrict right,
 #ifdef LEFT_TRANSPOSE
 
 #ifdef USE_SIMD
-  SIMD_TYPE calc_memo[BLOCK_SIZE][BLOCK_SIZE / SIMD_WIDTH];
+  // SIMD_TYPE calc_memo[BLOCK_SIZE][BLOCK_SIZE / SIMD_WIDTH];
 
-  for (INDEX_TYPE left_x = 0; left_x < BLOCK_SIZE; left_x += SIMD_WIDTH) {
-    for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
-      SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][left_x]);
+  IGNORE_UNUSED(left);
+  IGNORE_UNUSED(right);
+  IGNORE_UNUSED(dest);
+
+  for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
+    for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
+#ifdef UNROLLED_SIMD
+      __m256d left_fragments[SIMD_PER_BLOCK], right_fragments[SIMD_PER_BLOCK];
+
+      left_fragments[0] = _mm256_load_pd(&left->element[left_y][0]);
+      left_fragments[1] = _mm256_load_pd(&left->element[left_y][4]);
+      left_fragments[2] = _mm256_load_pd(&left->element[left_y][8]);
+      left_fragments[3] = _mm256_load_pd(&left->element[left_y][12]);
+      right_fragments[0] = _mm256_load_pd(&right->element[right_x][0]);
+      right_fragments[1] = _mm256_load_pd(&right->element[right_x][4]);
+      right_fragments[2] = _mm256_load_pd(&right->element[right_x][8]);
+      right_fragments[3] = _mm256_load_pd(&right->element[right_x][12]);
+
+      left_fragments[0] = _mm256_mul_pd(left_fragments[0], right_fragments[0]);
+      left_fragments[1] = _mm256_mul_pd(left_fragments[1], right_fragments[1]);
+      left_fragments[2] = _mm256_mul_pd(left_fragments[2], right_fragments[2]);
+      left_fragments[3] = _mm256_mul_pd(left_fragments[3], right_fragments[3]);
+
+      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[1]);
+      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[2]);
+      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[3]);
+
+      dest->element[right_x][left_y] += left_fragments[0][0] + left_fragments[0][1] + left_fragments[0][2] + left_fragments[0][3];
+#else  // UNROLLED_SIMD
       SIMD_TYPE sum = {0};
-
-      for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
-        // SIMD_TYPE right_fragment =
-        // _mm256_load_pd(&right->element[right_x][left_x]);
+      for (INDEX_TYPE move = 0; move < BLOCK_SIZE; move += SIMD_PER_BLOCK) {
+        SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][move]);
         SIMD_TYPE right_fragment =
-            _mm256_load_pd(&right->element[right_x][left_x]);
-        // printf("%3d, %3d, %3d: %.3f, %.3f ... %.3f\n", left_x, left_y,
-        // right_x, right_fragment[0], right_fragment[1],
-        // right_fragment[SIMD_WIDTH - 1]);
+            _mm256_load_pd(&right->element[right_x][move]);
 
-        right_fragment = _mm256_mul_pd(left_fragment, right_fragment);
-        sum = _mm256_add_pd(right_fragment, sum);
+        left_fragment = _mm256_mul_pd(left_fragment, right_fragment);
+        sum = _mm256_add_pd(sum, left_fragment);
       }
 
-      // if LEFT_TRANSPOSE is enable, The destination is transposed
-      // dest->element[left_y][right_x] += left_fragment @ right_fragment
+      dest->element[right_x][left_y] += sum[0] + sum[1] + sum[2] + sum[3];
     }
   }
+#endif // UNROLLED_SIMD
 #else  // USE_SIMD
   for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
     for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {
@@ -182,6 +204,6 @@ void BLOCK_MULT(block *const restrict left, block *const restrict right,
   }
 #endif // USE_SIMD
 #endif // LEFT_TRANSPOSE
-}
+    }
 
 #endif // BLOCK_MULT_FUNC
