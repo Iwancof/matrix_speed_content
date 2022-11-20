@@ -1,17 +1,39 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<omp.h>
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "matrix.h"
 
 int inner_main();
+int inner_main_block_test();
 
 int main() {
   srand(0);
 
-  for(int i = 0;i < 10;i++) {
-    inner_main();
+  inner_main_block_test();
+}
+
+int inner_main_block_test() {
+  block *blk1 = allocate_block();
+  block *blk2 = allocate_block();
+  block *dest = allocate_block();
+  INDEX_TYPE bx, by;
+  
+  for_each_element(bx, by) {
+    blk1->element[by][bx] = (double)rand() / RAND_MAX;
+    blk2->element[by][bx] = (double)rand() / RAND_MAX;
   }
+
+  // puts("blk1");
+  // show_block(blk1);
+  puts("blk2");
+  show_block(blk2);
+
+  left_pre_block(blk2);
+
+  BLOCK_MULT(blk1, blk2, dest);
+
+  return 0;
 }
 
 int inner_main() {
@@ -22,7 +44,7 @@ int inner_main() {
   // matrix *dest2 = allocate_matrix();
 
   matrix *thread_memo[PARALLEL];
-  for(int i = 0;i < PARALLEL;i++) {
+  for (int i = 0; i < PARALLEL; i++) {
     thread_memo[i] = map_matrix();
   }
 
@@ -59,7 +81,7 @@ int inner_main() {
   unmap_matrix(right);
   unmap_matrix(dest1);
 
-  for(int i = 0;i < PARALLEL;i++) {
+  for (int i = 0; i < PARALLEL; i++) {
     unmap_matrix(thread_memo[i]);
   }
 

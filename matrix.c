@@ -40,8 +40,6 @@ matrix *map_matrix() {
     }
   }
 
-  // printf("allocated %p\n", target);
-
   size_t x, y, bx, by;
   for_each_blocks(x, y) {
     for_each_element(bx, by) { target->blocks[y][x].element[by][bx] = 0.; }
@@ -83,6 +81,7 @@ void show_matrix(matrix *mat) {
 }
 
 void show_block(block *blk) {
+  // TODO: LEFT_TRANSPOSE
   for (INDEX_TYPE y = 0; y < BLOCK_SIZE; y++) {
     for (INDEX_TYPE x = 0; x < BLOCK_SIZE; x++) {
       printf("%3.3f ", blk->element[y][x]);
@@ -132,6 +131,33 @@ void BLOCK_MULT(block *left, block *right, block *dest) {
   DOC(__builtin_prefetch(&(dest)->element, 1))
 
 #ifdef LEFT_TRANSPOSE
+
+#ifdef USE_SIMD
+  SIMD_TYPE calc_memo[BLOCK_SIZE][BLOCK_SIZE / SIMD_WIDTH];
+
+  for (INDEX_TYPE left_x = 0; left_x < BLOCK_SIZE; left_x += SIMD_WIDTH) {
+    for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
+      SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][left_x]);
+      SIMD_TYPE sum = {0};
+
+      for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
+        // SIMD_TYPE right_fragment =
+        // _mm256_load_pd(&right->element[right_x][left_x]);
+        SIMD_TYPE right_fragment =
+            _mm256_load_pd(&right->element[right_x][left_x]);
+        // printf("%3d, %3d, %3d: %.3f, %.3f ... %.3f\n", left_x, left_y,
+        // right_x, right_fragment[0], right_fragment[1],
+        // right_fragment[SIMD_WIDTH - 1]);
+
+        right_fragment = _mm256_mul_pd(left_fragment, right_fragment);
+        sum = _mm256_add_pd(right_fragment, sum);
+      }
+
+      // if LEFT_TRANSPOSE is enable, The destination is transposed
+      // dest->element[left_y][right_x] += left_fragment @ right_fragment
+    }
+  }
+#else  // USE_SIMD
   for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
     for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {
       for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {
@@ -140,7 +166,11 @@ void BLOCK_MULT(block *left, block *right, block *dest) {
       }
     }
   }
+#endif // USE_SIMD
 #else  // LEFT_TRANSPOSE
+#ifdef USE_SIMD
+#error "Using simd without LEFT_TRANSPOSE is not supported now."
+#else  // USE_SIMD
   for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {
     for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
       for (INDEX_TYPE index = 0; index < BLOCK_SIZE; index++) {
@@ -149,35 +179,8 @@ void BLOCK_MULT(block *left, block *right, block *dest) {
       }
     }
   }
+#endif // USE_SIMD
 #endif // LEFT_TRANSPOSE
 }
 
-/*
-void BLOCK_MULT(block *left, block *right, block *dest) {
-  DOC(TODO : replace fast algorithm)
-  DOC(__builtin_prefetch(&(left)->element, 0))
-  DOC(__builtin_prefetch(&(right)->element, 0))
-  DOC(__builtin_prefetch(&(dest)->element, 1))
-
-  puts("");
-
-  for(INDEX_TYPE left_y = 0;left_y < BLOCK_SIZE;) {
-    INDEX_TYPE right_x = 0;
-
-    SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][0]);
-
-    for(;right_x < BLOCK_SIZE;right_x++) {
-    }
-
-    left_y += 1;
-    right_x -= 1;
-
-    for(;0 <= right_x;right_x--) {
-    }
-
-    left_y += 1;
-  }
-}
-*/
-
-#endif
+#endif // BLOCK_MULT_FUNC
