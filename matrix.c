@@ -122,8 +122,22 @@ void left_pre_matrix(matrix *mat) {
 #endif
 }
 
-void block_add(const block *const restrict left,
-               const block *const restrict right, block *const restrict dest) {
+void block_add(const block *const restrict from, block *const restrict dest) {
+  for (INDEX_TYPE x = 0; x < BLOCK_SIZE; x += 4) {
+    for (INDEX_TYPE y = 0; y < BLOCK_SIZE; y++) {
+      SIMD_TYPE fragment, dest_fragment;
+      fragment = _mm256_load_pd(&from->element[y][x]);
+      dest_fragment = _mm256_load_pd(&dest->element[y][x]);
+
+      fragment = _mm256_add_pd(fragment, dest_fragment);
+      _mm256_store_pd(&dest->element[y][x], fragment);
+    }
+  }
+}
+
+void block_add_2(const block *const restrict left,
+                 const block *const restrict right,
+                 block *const restrict dest) {
 #ifdef RIGHT_TRANSPOSE
 #ifdef USE_SIMD
   // right and dest is transposed.
@@ -443,9 +457,10 @@ void matrix_mult_per_block(const matrix *const restrict left,
                            const matrix *const restrict right,
                            matrix *const restrict dest,
                            matrix *const restrict thread_memo[PARALLEL]) {
-  INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
-
 #ifdef RIGHT_TRANSPOSE
+
+#ifdef USE_REDUCTION
+  INDEX_TYPE cache_block_x, cache_block_y, move;
 
 #pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
     schedule(static)
@@ -462,9 +477,7 @@ void matrix_mult_per_block(const matrix *const restrict left,
     }
   }
 
-  puts("reducting");
-
-#pragma omp parallel for private(cache_block_x, block_x, block_y)              \
+#pragma omp parallel for private(cache_block_x)              \
     num_threads(PARALLEL) schedule(static)
   for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
     for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
@@ -472,15 +485,28 @@ void matrix_mult_per_block(const matrix *const restrict left,
       for (int i = 0; i < PARALLEL; i++) {
         const block *const from =
             &thread_memo[i]->blocks[cache_block_y][cache_block_x];
-        for (block_x = 0; block_x < BLOCK_SIZE; block_x++) {
-          for (block_y = 0; block_y < BLOCK_SIZE; block_y++) {
-            dest_block->element[block_y][block_x] +=
-                from->element[block_y][block_x];
-          }
-        }
+        block_add(from, dest_block);
       }
     }
   }
+#else // USE_REDUCTION
+  INDEX_TYPE cache_block_x, cache_block_y, move;
+
+  IGNORE_UNUSED(thread_memo);
+
+#pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
+    schedule(static)
+  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
+         cache_block_y++) { // for write cache
+      for (move = 0; move < SUPER_SIZE; move++) {
+        BLOCK_MULT(&left->blocks[cache_block_y][move],
+                   &right->blocks[cache_block_x][move],
+                   &dest->blocks[cache_block_x][cache_block_y]);
+      }
+    }
+  }
+#endif // USE_REDUCTION
 
 #else // RIGHT_TRANSPOSE
 

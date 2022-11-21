@@ -92,9 +92,13 @@ void left_pre_block(block *blk);
 /// ASSUME: mat has been initialized.
 void left_pre_matrix(matrix *mat);
 
+/// ASSUME: from, restrict has been initialized.
+/// ASSUME: from and dest same transpose state.
+void block_add(const block* const restrict from, block* const restrict dest);
+
 /// ASSUME: left, right, dest has been initialized.
 /// ASSUME: left is not right and left is not dest
-void block_add(const block *const restrict left,
+void block_add_2(const block *const restrict left,
                const block *const restrict right, block *const restrict dest);
 
 /// ASSUME: left, right and dest has been initialized.

@@ -1,5 +1,6 @@
 #define BLOCK_MULT_FUNC
 #define RIGHT_TRANSPOSE
+// #define USE_REDUCTION
 #define USE_SIMD
 
 #define UNROLL_DISABLED 0
