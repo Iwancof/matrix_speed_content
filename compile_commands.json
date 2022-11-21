@@ -1,35 +1,13 @@
 [
   {
     "arguments": [
-      "/opt/cuda/bin/gcc",
+      "/usr/bin/gcc",
       "-W",
       "-Wall",
       "-Wextra",
-      "-O3",
-      "-mmmx",
-      "-msse2",
-      "-mavx",
-      "-fopenmp",
-      "-funroll-all-loops",
-      "-c",
-      "-o",
-      "host_main.o",
-      "main.c"
-    ],
-    "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
-    "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.c",
-    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_main.o"
-  },
-  {
-    "arguments": [
-      "/opt/cuda/bin/gcc",
-      "-W",
-      "-Wall",
-      "-Wextra",
-      "-O3",
-      "-mmmx",
-      "-msse2",
-      "-mavx",
+      "-march=native",
+      "-mtune=native",
+      "-Ofast",
       "-fopenmp",
       "-funroll-all-loops",
       "-c",
@@ -40,5 +18,45 @@
     "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
     "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/matrix.c",
     "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_matrix.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-W",
+      "-Wall",
+      "-Wextra",
+      "-march=native",
+      "-mtune=native",
+      "-Ofast",
+      "-fopenmp",
+      "-funroll-all-loops",
+      "-c",
+      "-o",
+      "host_unit_tests.o",
+      "unit_tests.c"
+    ],
+    "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
+    "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/unit_tests.c",
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_unit_tests.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-W",
+      "-Wall",
+      "-Wextra",
+      "-march=native",
+      "-mtune=native",
+      "-Ofast",
+      "-fopenmp",
+      "-funroll-all-loops",
+      "-c",
+      "-o",
+      "host_main.o",
+      "main.c"
+    ],
+    "directory": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16",
+    "file": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/main.c",
+    "output": "/home/iwancof/WorkSpace/kosen/5-kouki/Dist/11-16/host_main.o"
   }
 ]

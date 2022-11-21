@@ -1,6 +1,6 @@
 import re
 
-with open("./settings", "r") as f:
+with open("./settings.h", "r") as f:
     content = f.read()
 
 

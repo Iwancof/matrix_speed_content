@@ -6,7 +6,7 @@
 /block_test_value
 /matrix_test_value
 /matrix_transpose_value
-/compile-commands.json
+/compile_commands.json
 /profile
 /bench
 /__pycache__
