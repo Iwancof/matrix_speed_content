@@ -216,6 +216,11 @@ inline void BLOCK_MULT(const block *const restrict left,
     }
   }
 #elif UNROLLED_SIMD == UNROLL_HARD
+
+#if BLOCK_SIZE != 0x10
+#error UNROLL_HARD needs being BLOCK_SIZE == 0x10
+#endif // SIMD_PER_BLOCK
+
   SIMD_TYPE left_fragment0;
   SIMD_TYPE left_fragment1;
   SIMD_TYPE left_fragment2;
