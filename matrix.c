@@ -128,22 +128,38 @@ inline void BLOCK_MULT(const block *const restrict left,
                        const block *const restrict right,
                        block *const restrict dest) {
   DOC(TODO : replace fast algorithm)
-  DOC(__builtin_prefetch(&(left)->element, 0);)
-  DOC(__builtin_prefetch(&(right)->element, 0);)
-  DOC(__builtin_prefetch(&(dest)->element, 1);)
+  __builtin_prefetch(&(left)->element, 0);
+  __builtin_prefetch(&(right)->element, 0);
+  __builtin_prefetch(&(dest)->element, 1);
 
 #ifdef LEFT_TRANSPOSE
 
 #ifdef USE_SIMD
   // SIMD_TYPE calc_memo[BLOCK_SIZE][BLOCK_SIZE / SIMD_WIDTH];
 
-  IGNORE_UNUSED(left);
-  IGNORE_UNUSED(right);
-  IGNORE_UNUSED(dest);
+#ifndef UNROLLED_SIMD
+#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD.
+#endif // UNROLLED_SIMD
 
+#if UNROLLED_SIMD == UNROLL_DISABLED
   for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
     for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
-#ifdef UNROLLED_SIMD
+      SIMD_TYPE sum = {0};
+      for (INDEX_TYPE move = 0; move < BLOCK_SIZE; move += SIMD_PER_BLOCK) {
+        SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][move]);
+        SIMD_TYPE right_fragment =
+            _mm256_load_pd(&right->element[right_x][move]);
+
+        left_fragment = _mm256_mul_pd(left_fragment, right_fragment);
+        sum = _mm256_add_pd(sum, left_fragment);
+      }
+
+      dest->element[right_x][left_y] += sum[0] + sum[1] + sum[2] + sum[3];
+    }
+  }
+#elif UNROLLED_SIMD == UNROLL_NORMAL
+  for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
+    for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
       __m256d left_fragments[SIMD_PER_BLOCK], right_fragments[SIMD_PER_BLOCK];
 
       left_fragments[0] = _mm256_load_pd(&left->element[left_y][0]);
@@ -164,21 +180,15 @@ inline void BLOCK_MULT(const block *const restrict left,
       left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[2]);
       left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[3]);
 
-      dest->element[right_x][left_y] += left_fragments[0][0] + left_fragments[0][1] + left_fragments[0][2] + left_fragments[0][3];
-#else  // UNROLLED_SIMD
-      SIMD_TYPE sum = {0};
-      for (INDEX_TYPE move = 0; move < BLOCK_SIZE; move += SIMD_PER_BLOCK) {
-        SIMD_TYPE left_fragment = _mm256_load_pd(&left->element[left_y][move]);
-        SIMD_TYPE right_fragment =
-            _mm256_load_pd(&right->element[right_x][move]);
-
-        left_fragment = _mm256_mul_pd(left_fragment, right_fragment);
-        sum = _mm256_add_pd(sum, left_fragment);
-      }
-
-      dest->element[right_x][left_y] += sum[0] + sum[1] + sum[2] + sum[3];
+      dest->element[right_x][left_y] +=
+          left_fragments[0][0] + left_fragments[0][1] + left_fragments[0][2] +
+          left_fragments[0][3];
     }
   }
+#elif UNROLLED_SIMD == UNROLL_HARD
+#error Hard unrolling is now preparing...
+#else // UNROLLED_SIMD
+#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD.
 #endif // UNROLLED_SIMD
 #else  // USE_SIMD
   for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
@@ -204,6 +214,6 @@ inline void BLOCK_MULT(const block *const restrict left,
   }
 #endif // USE_SIMD
 #endif // LEFT_TRANSPOSE
-    }
+}
 
 #endif // BLOCK_MULT_FUNC

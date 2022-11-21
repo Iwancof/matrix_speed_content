@@ -1,8 +1,14 @@
 #define BLOCK_MULT_FUNC
 #define LEFT_TRANSPOSE
-// #define USE_SIMD
+#define USE_SIMD
 
-#define UNROLLED_SIMD
+#define UNROLL_DISABLED 0
+#define UNROLL_NORMAL 1
+#define UNROLL_HARD 2
+
+#define UNROLLED_SIMD UNROLL_DISABLED
+// #define UNROLLED_SIMD UNROLL_NORMAL
+// #define UNROLLED_SIMD UNROLL_HARD
 
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
@@ -13,7 +19,7 @@
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 
 #define BLOCK_SIZE 0x10
-#define MATRIX_SIZE 0x1000
+#define MATRIX_SIZE 0x200
 
 #define SIMD_TYPE __m256d
 #define SIMD_WIDTH (sizeof(SIMD_TYPE) / sizeof(INNER_TYPE))
