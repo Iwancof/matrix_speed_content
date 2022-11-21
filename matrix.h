@@ -57,13 +57,13 @@
 
 #define WRITEBACK_TO_DEST(dest, left_y, left_base_x, sum)                      \
   do {                                                                         \
-    dest->element[left_y][(left_base_x) + 0] =                                 \
+    dest->element[(left_base_x) + 0][left_y] +=                                \
         sum##0 [0] + sum##0 [1] + sum##0 [2] + sum##0 [3];                     \
-    dest->element[left_y][(left_base_x) + 1] =                                 \
+    dest->element[(left_base_x) + 1][left_y] +=                                \
         sum##1 [0] + sum##1 [1] + sum##1 [2] + sum##1 [3];                     \
-    dest->element[left_y][(left_base_x) + 2] =                                 \
+    dest->element[(left_base_x) + 2][left_y] +=                                \
         sum##2 [0] + sum##2 [1] + sum##2 [2] + sum##2 [3];                     \
-    dest->element[left_y][(left_base_x) + 3] =                                 \
+    dest->element[(left_base_x) + 3][left_y] +=                                \
         sum##3 [0] + sum##3 [1] + sum##3 [2] + sum##3 [3];                     \
   } while (0)
 
@@ -168,7 +168,7 @@ static inline void matrix_mult_per_block(
     }
   }
 
-  puts("reducting");
+  // puts("reducting");
 
 #pragma omp parallel for private(cache_block_x, block_x, block_y)              \
     num_threads(PARALLEL) schedule(static)

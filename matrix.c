@@ -128,9 +128,9 @@ inline void BLOCK_MULT(const block *const restrict left,
                        const block *const restrict right,
                        block *const restrict dest) {
   DOC(TODO : replace fast algorithm)
-  __builtin_prefetch(&(left)->element, 0);
-  __builtin_prefetch(&(right)->element, 0);
-  __builtin_prefetch(&(dest)->element, 1);
+  DOC(__builtin_prefetch(&(left)->element, 0);)
+  DOC(__builtin_prefetch(&(right)->element, 0);)
+  DOC(__builtin_prefetch(&(dest)->element, 1);)
 
 #ifdef LEFT_TRANSPOSE
 
@@ -185,243 +185,193 @@ inline void BLOCK_MULT(const block *const restrict left,
     }
   }
 #elif UNROLLED_SIMD == UNROLL_HARD
-  volatile SIMD_TYPE left_fragment0;
-  volatile SIMD_TYPE left_fragment1;
-  volatile SIMD_TYPE left_fragment2;
-  volatile SIMD_TYPE left_fragment3;
+  SIMD_TYPE left_fragment0;
+  SIMD_TYPE left_fragment1;
+  SIMD_TYPE left_fragment2;
+  SIMD_TYPE left_fragment3;
 
-  volatile SIMD_TYPE right_fragment0;
-  volatile SIMD_TYPE right_fragment1;
-  volatile SIMD_TYPE right_fragment2;
-  volatile SIMD_TYPE right_fragment3;
+  SIMD_TYPE right_fragment0;
+  SIMD_TYPE right_fragment1;
+  SIMD_TYPE right_fragment2;
+  SIMD_TYPE right_fragment3;
 
-  volatile SIMD_TYPE sum0;
-  volatile SIMD_TYPE sum1;
-  volatile SIMD_TYPE sum2;
-  volatile SIMD_TYPE sum3;
+  SIMD_TYPE sum0;
+  SIMD_TYPE sum1;
+  SIMD_TYPE sum2;
+  SIMD_TYPE sum3;
 
-  volatile SIMD_TYPE tmp0;
-  volatile SIMD_TYPE tmp1;
-  volatile SIMD_TYPE tmp2;
-  volatile SIMD_TYPE tmp3;
+  SIMD_TYPE tmp0;
+  SIMD_TYPE tmp1;
+  SIMD_TYPE tmp2;
+  SIMD_TYPE tmp3;
 
   // consume 16 registers(ymm)
 
-  /*
-  left_fragment0 = _mm256_load_pd(&left->element[0][0]);
-  left_fragment1 = _mm256_load_pd(&left->element[0][4]);
-  left_fragment2 = _mm256_load_pd(&left->element[0][8]);
-  left_fragment3 = _mm256_load_pd(&left->element[0][12]);
-  */
-
   LOAD_LEFT_FRAGMENT(left_fragment, left, 0);
-
-  /*
-  right_fragment0 = _mm256_load_pd(&right->element[0][0]);
-  right_fragment1 = _mm256_load_pd(&right->element[1][0]);
-  right_fragment2 = _mm256_load_pd(&right->element[2][0]);
-  right_fragment3 = _mm256_load_pd(&right->element[3][0]);
-  */
-
-  LOAD_RIGHT_FRAGMENT(right_fragment, right, 0, 0);
+  // LOAD_RIGHT_FRAGMENT(right_fragment, right, 0, 0);
 
   for (INDEX_TYPE left_up_down_counter = 0; left_up_down_counter < 4;
-       left_up_down_counter++) { // will be unrolled(maybe...)
+       left_up_down_counter++) {
     INDEX_TYPE left_y = 0;
 
-    /*
-    sum0 = _mm256_mul_pd(left_fragment0, right_fragment0);
-    sum1 = _mm256_mul_pd(left_fragment0, right_fragment1);
-    sum2 = _mm256_mul_pd(left_fragment0, right_fragment2);
-    sum3 = _mm256_mul_pd(left_fragment0, right_fragment3);
-    */
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    // LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
     INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-    /*
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][4]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][4]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][4]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][4]);
-    */
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-
-    /*
-    tmp0 = _mm256_mul_pd(left_fragment1, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment1, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment1, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment1, right_fragment3);
-    */
     MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-
-    /*
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
-    */
     SUBMIT_TO_SUM(sum, tmp);
 
-    /*
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][8]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][8]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][8]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][8]);
-    */
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-
-    /*
-    tmp0 = _mm256_mul_pd(left_fragment2, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment2, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment2, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment2, right_fragment3);
-    */
     MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-
-    /*
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
-    */
     SUBMIT_TO_SUM(sum, tmp);
 
-    /*
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][12]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][12]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][12]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][12]);
-    */
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
-
-    /*
-    tmp0 = _mm256_mul_pd(left_fragment3, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment3, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment3, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment3, right_fragment3);
-    */
     MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
-
-    /*
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
-    */
     SUBMIT_TO_SUM(sum, tmp);
 
-    /*
-    dest->element[left_y][left_up_down_counter * 4 + 0] = sum0[0] + sum0[1] + sum0[2] + sum0[3];
-    dest->element[left_y][left_up_down_counter * 4 + 1] = sum1[0] + sum1[1] + sum1[2] + sum1[3];
-    dest->element[left_y][left_up_down_counter * 4 + 2] = sum2[0] + sum2[1] + sum2[2] + sum2[3];
-    dest->element[left_y][left_up_down_counter * 4 + 3] = sum3[0] + sum3[1] + sum3[2] + sum3[3];
-    */
     WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
     left_y += 1;
 
     LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
-
     INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][12]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][12]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][12]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][12]);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+    SUBMIT_TO_SUM(sum, tmp);
 
-    tmp0 = _mm256_mul_pd(left_fragment2, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment2, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment2, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment2, right_fragment3);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+    SUBMIT_TO_SUM(sum, tmp);
 
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
+    SUBMIT_TO_SUM(sum, tmp);
 
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][8]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][8]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][8]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][8]);
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
-    tmp0 = _mm256_mul_pd(left_fragment1, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment1, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment1, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment1, right_fragment3);
+    left_y += 1;
 
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
+    do {
+      LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][4]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][4]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][4]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][4]);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+      SUBMIT_TO_SUM(sum, tmp);
 
-    tmp0 = _mm256_mul_pd(left_fragment1, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment1, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment1, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment1, right_fragment3);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+      SUBMIT_TO_SUM(sum, tmp);
 
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
+      SUBMIT_TO_SUM(sum, tmp);
 
-    right_fragment0 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 0][0]);
-    right_fragment1 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 1][0]);
-    right_fragment2 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 2][0]);
-    right_fragment3 =
-        _mm256_load_pd(&right->element[4 * left_up_down_counter + 3][0]);
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
-    tmp0 = _mm256_mul_pd(left_fragment0, right_fragment0);
-    tmp1 = _mm256_mul_pd(left_fragment0, right_fragment1);
-    tmp2 = _mm256_mul_pd(left_fragment0, right_fragment2);
-    tmp3 = _mm256_mul_pd(left_fragment0, right_fragment3);
+      left_y += 1;
 
-    sum0 = _mm256_add_pd(sum0, tmp0);
-    sum1 = _mm256_add_pd(sum1, tmp1);
-    sum2 = _mm256_add_pd(sum2, tmp2);
-    sum3 = _mm256_add_pd(sum3, tmp3);
+      LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-    dest->element[left_y][left_up_down_counter * 4 + 0] = sum0[0] + sum0[1] + sum0[2] + sum0[3];
-    dest->element[left_y][left_up_down_counter * 4 + 1] = sum1[0] + sum1[1] + sum1[2] + sum1[3];
-    dest->element[left_y][left_up_down_counter * 4 + 2] = sum2[0] + sum2[1] + sum2[2] + sum2[3];
-    dest->element[left_y][left_up_down_counter * 4 + 3] = sum3[0] + sum3[1] + sum3[2] + sum3[3];
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+
+      left_y += 1;
+    } while (left_y < 16);
 
     left_up_down_counter += 1;
+    left_y -= 1;
 
-    /// B
-    for (left_y--; 0 <= left_y; left_y--) {
-      /// B
-    }
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    // LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+    INIT_SUM(sum, left_fragment, right_fragment, 0);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+
+    left_y -= 1;
+
+    LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+    INIT_SUM(sum, left_fragment, right_fragment, 3);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
+    SUBMIT_TO_SUM(sum, tmp);
+
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+
+    do {
+      left_y -= 1;
+
+      LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      INIT_SUM(sum, left_fragment, right_fragment, 0);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+
+      left_y -= 1;
+
+      LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      INIT_SUM(sum, left_fragment, right_fragment, 3);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+      MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
+      SUBMIT_TO_SUM(sum, tmp);
+
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+    } while (0 < left_y);
   }
 
 #else // UNROLLED_SIMD

@@ -6,12 +6,47 @@
 
 int inner_main();
 int inner_main_block_test();
+int inner_main_unit_block_test();
 
 int main() {
   srand(0);
 
-  // inner_main_block_test();
+  // inner_main_unit_block_test();
   inner_main();
+}
+
+int inner_main_unit_block_test() {
+  block *left, *right, *dest;
+  INDEX_TYPE x, y;
+
+  left = NULL;
+  right = NULL;
+  dest = NULL;
+
+  left = allocate_block();
+  right = allocate_block();
+  dest = allocate_block();
+
+  for_each_element(x, y) {
+    left->element[y][x] = (double)rand() / RAND_MAX;
+  }
+  for_each_element(x, y) {
+    right->element[y][x] = (double)rand() / RAND_MAX;
+  }
+
+  puts("left");
+  show_block(left);
+  puts("right");
+  show_block(right);
+
+  left_pre_block(right);
+  BLOCK_MULT(left, right, dest);
+  left_pre_block(dest);
+
+  puts("dest");
+  show_block(dest);
+
+  return 0;
 }
 
 int inner_main_block_test() {
@@ -63,14 +98,15 @@ int inner_main() {
 
   left_pre_matrix(right); // not needed for benchmark
 
-  puts("[+] matrix allocated!");
+  // puts("[+] matrix allocated!");
 
   double start, end;
 
   start = omp_get_wtime();
   matrix_mult_per_block(left, right, dest1, thread_memo);
   end = omp_get_wtime();
-  printf("[+] elapsed %f\n", end - start);
+  // printf("[+] elapsed %f\n", end - start);
+  printf("%f\n", end - start);
 
   /*
   puts("vanilla");

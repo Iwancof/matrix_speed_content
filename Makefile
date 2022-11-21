@@ -7,7 +7,7 @@ LINKER := mold
  
 COMMON_CFLAGS := -W -Wall -Wextra -march=native -mtune=native -Ofast
 
-HOST_GCC_CFLAGS := -fopenmp -funroll-all-loops -fuse-ld=mold -static-libgcc
+HOST_GCC_CFLAGS := -fopenmp -funroll-all-loops -static-libgcc
 DOCKER_ICX_FLAGS := -fiopenmp
 
 TEST_CFLAGS := $(CFLAGS) -lcunit -ggdb3

@@ -135,10 +135,13 @@ void block_mult_random_test() {
   }
 
   left_pre_block(blocks[1]);
-  left_pre_block(blocks[2]);
   BLOCK_MULT(blocks[0], blocks[1], blocks[3]);
+  left_pre_block(blocks[3]);
 
   for_each_element(x, y) {
+    if (fabs(blocks[2]->element[y][x] - blocks[3]->element[y][x]) > 0.01) {
+      printf("%d, %d\n", x, y);
+    }
     CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.01);
   }
 
