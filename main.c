@@ -27,12 +27,8 @@ int inner_main_unit_block_test() {
   right = allocate_block();
   dest = allocate_block();
 
-  for_each_element(x, y) {
-    left->element[y][x] = (double)rand() / RAND_MAX;
-  }
-  for_each_element(x, y) {
-    right->element[y][x] = (double)rand() / RAND_MAX;
-  }
+  for_each_element(x, y) { left->element[y][x] = (double)rand() / RAND_MAX; }
+  for_each_element(x, y) { right->element[y][x] = (double)rand() / RAND_MAX; }
 
   puts("left");
   show_block(left);
@@ -54,7 +50,7 @@ int inner_main_block_test() {
   block *blk2 = allocate_block();
   block *dest = allocate_block();
   INDEX_TYPE bx, by;
-  
+
   for_each_element(bx, by) {
     blk1->element[by][bx] = (double)rand() / RAND_MAX;
     blk2->element[by][bx] = (double)rand() / RAND_MAX;
@@ -72,6 +68,47 @@ int inner_main_block_test() {
   return 0;
 }
 
+#if REDUCTION_TYPE == REDUCTION_DISABLE_INSAME
+int inner_main() {
+  matrix *left = map_matrix();
+  matrix *right = map_matrix();
+
+  INDEX_TYPE x, y, bx, by;
+  for_each_blocks(x, y) {
+    for_each_element(bx, by) {
+      left->blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
+    }
+  }
+  for_each_blocks(x, y) {
+    for_each_element(bx, by) {
+      right->blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
+    }
+  }
+
+  // matrix *lefts[PARALLEL], *rights[PARALLEL], *dests[PARALLEL];
+  matrix *lefts[PARALLEL], *rights[PARALLEL], *dests;
+  for (int i = 0; i < PARALLEL; i++) {
+    matrix* tmp;
+    tmp = lefts[i] = map_matrix();
+    matrix_copy(left, tmp);
+    tmp = rights[i] = map_matrix();
+    matrix_copy(right, tmp);
+  }
+  dests = map_matrix();
+
+  double start, end;
+  puts("allocated");
+
+  start = omp_get_wtime();
+  matrix_mult_per_block((const matrix* const restrict*)lefts, (const matrix* const restrict*)rights, dests);
+  end = omp_get_wtime();
+
+  printf("%f\n", end - start);
+
+  return 0;
+}
+
+#else
 int inner_main() {
 
   matrix *left = map_matrix();
@@ -126,3 +163,4 @@ int inner_main() {
 
   return 0;
 }
+#endif

@@ -92,14 +92,19 @@ void left_pre_block(block *blk);
 /// ASSUME: mat has been initialized.
 void left_pre_matrix(matrix *mat);
 
+/// ASSUME: from has been initialized.
+/// ASSUME: dest has been initialized.
+void matrix_copy(const matrix *const restrict from,
+                 matrix *const restrict dest);
+
 /// ASSUME: from, restrict has been initialized.
 /// ASSUME: from and dest same transpose state.
-void block_add(const block* const restrict from, block* const restrict dest);
+void block_add(const block *const restrict from, block *const restrict dest);
 
 /// ASSUME: left, right, dest has been initialized.
 /// ASSUME: left is not right and left is not dest
 void block_add_2(const block *const restrict left,
-               const block *const restrict right, block *const restrict dest);
+                 const block *const restrict right, block *const restrict dest);
 
 /// ASSUME: left, right and dest has been initialized.
 /// NOTE: This function will not initialize dest.
@@ -155,9 +160,17 @@ void BLOCK_MULT(const block *const restrict left,
 /// ASSUME: left, right, dest has been allocated.
 /// ASSUME: dest has been initialized.
 
+#if REDUCTION_TYPE == REDUCTION_DISABLE_INSAME
+void matrix_mult_per_block(const matrix *const restrict left[PARALLEL],
+                           const matrix *const restrict right[PARALLEL],
+                           matrix *const restrict dest);
+#else // REDUCTION_TYPE
+
 void matrix_mult_per_block(const matrix *const restrict left,
                            const matrix *const restrict right,
                            matrix *const restrict dest,
                            matrix *const restrict thread_memo[PARALLEL]);
+
+#endif
 
 void matrix_mult_vanilla(matrix *left, matrix *right, matrix *dest);

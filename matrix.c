@@ -122,6 +122,10 @@ void left_pre_matrix(matrix *mat) {
 #endif
 }
 
+void matrix_copy(const matrix*const restrict from, matrix*const restrict dest) {
+  memcpy(dest, from, sizeof(matrix));
+}
+
 void block_add(const block *const restrict from, block *const restrict dest) {
   for (INDEX_TYPE x = 0; x < BLOCK_SIZE; x += 4) {
     for (INDEX_TYPE y = 0; y < BLOCK_SIZE; y++) {
@@ -453,6 +457,30 @@ inline void BLOCK_MULT(const block *const restrict left,
 }
 #endif // BLOCK_MULT_FUNC
 
+#if REDUCTION_TYPE == REDUCTION_DISABLE_INSAME
+
+void matrix_mult_per_block(const matrix *const restrict left[PARALLEL],
+                           const matrix *const restrict right[PARALLEL],
+                           matrix *const restrict dest) {
+  INDEX_TYPE cache_block_x, cache_block_y, move;
+
+#pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
+    schedule(static)
+  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    const int thread_index = omp_get_thread_num();
+    for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
+         cache_block_y++) { // for write cache
+      for (move = 0; move < SUPER_SIZE; move++) {
+        BLOCK_MULT(&left[thread_index]->blocks[cache_block_y][move],
+                   &right[thread_index]->blocks[cache_block_x][move],
+                   &dest->blocks[cache_block_x][cache_block_y]);
+      }
+    }
+  }
+}
+
+#else // REDUCTION_TYPE
+
 void matrix_mult_per_block(const matrix *const restrict left,
                            const matrix *const restrict right,
                            matrix *const restrict dest,
@@ -581,8 +609,10 @@ void matrix_mult_per_block(const matrix *const restrict left,
       }
     }
   }
-#endif
+#endif // RIGHT_TRANSPOSE
 }
+
+#endif // REDUCTION_TYPE
 
 void matrix_mult_vanilla(matrix *left, matrix *right, matrix *dest) {
   // TODO: RIGHT_TRANSPOSE
@@ -595,3 +625,5 @@ void matrix_mult_vanilla(matrix *left, matrix *right, matrix *dest) {
     }
   }
 }
+
+
