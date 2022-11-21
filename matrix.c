@@ -459,7 +459,24 @@ void matrix_mult_per_block(const matrix *const restrict left,
                            matrix *const restrict thread_memo[PARALLEL]) {
 #ifdef RIGHT_TRANSPOSE
 
-#ifdef USE_REDUCTION
+#if REDUCTION_TYPE == REDUCTION_DISABLE
+  INDEX_TYPE cache_block_x, cache_block_y, move;
+
+  IGNORE_UNUSED(thread_memo);
+
+#pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
+    schedule(static)
+  for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
+         cache_block_y++) { // for write cache
+      for (move = 0; move < SUPER_SIZE; move++) {
+        BLOCK_MULT(&left->blocks[cache_block_y][move],
+                   &right->blocks[cache_block_x][move],
+                   &dest->blocks[cache_block_x][cache_block_y]);
+      }
+    }
+  }
+#elif REDUCTION_TYPE == REDUCTION_NORMAL // USE_REDUCTION
   INDEX_TYPE cache_block_x, cache_block_y, move;
 
 #pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
@@ -477,8 +494,8 @@ void matrix_mult_per_block(const matrix *const restrict left,
     }
   }
 
-#pragma omp parallel for private(cache_block_x)              \
-    num_threads(PARALLEL) schedule(static)
+#pragma omp parallel for private(cache_block_x) num_threads(PARALLEL)          \
+    schedule(static)
   for (cache_block_y = 0; cache_block_y < SUPER_SIZE; cache_block_y++) {
     for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
       block *const dest_block = &dest->blocks[cache_block_y][cache_block_x];
@@ -489,23 +506,46 @@ void matrix_mult_per_block(const matrix *const restrict left,
       }
     }
   }
-#else // USE_REDUCTION
+#elif REDUCTION_TYPE == REDUCTION_FAST
   INDEX_TYPE cache_block_x, cache_block_y, move;
-
-  IGNORE_UNUSED(thread_memo);
+  INDEX_TYPE dirty[PARALLEL][SUPER_SIZE];
+  memset(dirty, 0, sizeof(dirty));
 
 #pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
     schedule(static)
   for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+    const int thread_index = omp_get_thread_num();
+    matrix *const thread_dest = thread_memo[thread_index];
+    dirty[thread_index][cache_block_x] = 1; // I touched.
     for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
          cache_block_y++) { // for write cache
       for (move = 0; move < SUPER_SIZE; move++) {
         BLOCK_MULT(&left->blocks[cache_block_y][move],
                    &right->blocks[cache_block_x][move],
-                   &dest->blocks[cache_block_x][cache_block_y]);
+                   &thread_dest->blocks[cache_block_x][cache_block_y]);
       }
     }
   }
+
+  /*
+  #pragma omp parallel for private(cache_block_x) num_threads(PARALLEL) \
+    schedule(static)
+    */
+  for (INDEX_TYPE thread_index_search = 0; thread_index_search < PARALLEL;
+       thread_index_search++) {
+    for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
+      if (__builtin_expect(dirty[thread_index_search][cache_block_x], 0)) {
+        // thread_memo[thread_index_search]->blocks[cache_block_x][ any! ] has
+        // data.
+        memcpy(&dest->blocks[cache_block_x],
+               &thread_memo[thread_index_search]->blocks[cache_block_x],
+               sizeof(block[SUPER_SIZE]));
+      }
+    }
+  }
+
+#else // REDUCTION_TYPE
+#error REDUCTION_TYPE is not defined.
 #endif // USE_REDUCTION
 
 #else // RIGHT_TRANSPOSE
