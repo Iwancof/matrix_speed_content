@@ -81,7 +81,7 @@ void show_matrix(matrix *mat) {
 }
 
 void show_block(block *blk) {
-  // TODO: LEFT_TRANSPOSE
+  // TODO: RIGHT_TRANSPOSE
   for (INDEX_TYPE y = 0; y < BLOCK_SIZE; y++) {
     for (INDEX_TYPE x = 0; x < BLOCK_SIZE; x++) {
       printf("%3.3f ", blk->element[y][x]);
@@ -92,7 +92,7 @@ void show_block(block *blk) {
 
 void left_pre_block(block *blk) {
   IGNORE_UNUSED(blk);
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
   for (INDEX_TYPE x = 1; x < BLOCK_SIZE; x++) { // BLOCK_SIZE is not zero.
     for (INDEX_TYPE y = 0; y < x; y++) {
       double tmp = blk->element[y][x];
@@ -105,7 +105,7 @@ void left_pre_block(block *blk) {
 
 void left_pre_matrix(matrix *mat) {
   IGNORE_UNUSED(mat);
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
   INDEX_TYPE x, y;
   for_each_blocks(x, y) { left_pre_block(&mat->blocks[y][x]); }
 
@@ -132,7 +132,7 @@ inline void BLOCK_MULT(const block *const restrict left,
   DOC(__builtin_prefetch(&(right)->element, 0);)
   DOC(__builtin_prefetch(&(dest)->element, 1);)
 
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
 
 #ifdef USE_SIMD
 
@@ -387,9 +387,9 @@ inline void BLOCK_MULT(const block *const restrict left,
     }
   }
 #endif // USE_SIMD
-#else  // LEFT_TRANSPOSE
+#else  // RIGHT_TRANSPOSE
 #ifdef USE_SIMD
-#error "Using simd without LEFT_TRANSPOSE is not supported now."
+#error "Using simd without RIGHT_TRANSPOSE is not supported now."
 #else  // USE_SIMD
   for (INDEX_TYPE height = 0; height < BLOCK_SIZE; height++) {
     for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {
@@ -400,6 +400,6 @@ inline void BLOCK_MULT(const block *const restrict left,
     }
   }
 #endif // USE_SIMD
-#endif // LEFT_TRANSPOSE
+#endif // RIGHT_TRANSPOSE
 }
 #endif // BLOCK_MULT_FUNC

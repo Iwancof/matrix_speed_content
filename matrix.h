@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "settings"
+#include "settings.h"
 
 #define DOC(ignore)
 
@@ -103,7 +103,7 @@ void BLOCK_MULT(const block *const restrict left,
 
 #else // BLOCK_MULT_FUNC
 
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
 
 #define BLOCK_MULT(left, right, dest)                                          \
   do {                                                                         \
@@ -139,7 +139,7 @@ void BLOCK_MULT(const block *const restrict left,
     }                                                                          \
   } while (0)
 
-#endif // LEFT_TRANSPOSE
+#endif // RIGHT_TRANSPOSE
 
 #endif // BLOCK_MULT_FUNC
 
@@ -151,7 +151,7 @@ static inline void matrix_mult_per_block(
     matrix *const restrict dest, matrix *const restrict thread_memo[PARALLEL]) {
   INDEX_TYPE cache_block_x, cache_block_y, move, block_x, block_y;
 
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
 
 #pragma omp parallel for private(cache_block_x, move) num_threads(PARALLEL)    \
     schedule(static)
@@ -188,7 +188,7 @@ static inline void matrix_mult_per_block(
     }
   }
 
-#else // LEFT_TRANSPOSE
+#else // RIGHT_TRANSPOSE
 
 #pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
     schedule(static)
@@ -226,7 +226,7 @@ static inline void matrix_mult_per_block(
 
 static inline void matrix_mult_vanilla(matrix *left, matrix *right,
                                        matrix *dest) {
-  // TODO: LEFT_TRANSPOSE
+  // TODO: RIGHT_TRANSPOSE
   for (INDEX_TYPE x = 0; x < SUPER_SIZE; x++) {
     for (INDEX_TYPE y = 0; y < SUPER_SIZE; y++) {
       for (INDEX_TYPE i = 0; i < SUPER_SIZE; i++) {

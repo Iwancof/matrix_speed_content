@@ -21,7 +21,7 @@ int main() {
   CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
   CU_add_test(suite, "Block mult random test", block_mult_random_test);
 
-#ifdef LEFT_TRANSPOSE
+#ifdef RIGHT_TRANSPOSE
   CU_add_test(suite, "Block transpose test", block_transpose_test);
   CU_add_test(suite, "Matrix transpose test", matrix_transpose_test);
 #endif
