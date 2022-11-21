@@ -8,6 +8,7 @@
 
 void block_mult_unit_test();
 void block_mult_random_test();
+void block_add_test();
 void block_transpose_test();
 void matrix_transpose_test();
 void matrix_mult_random_test();
@@ -20,6 +21,7 @@ int main() {
 
   CU_add_test(suite, "Block mult unit test", block_mult_unit_test);
   CU_add_test(suite, "Block mult random test", block_mult_random_test);
+  CU_add_test(suite, "Block add test", block_add_test);
 
 #ifdef RIGHT_TRANSPOSE
   CU_add_test(suite, "Block transpose test", block_transpose_test);
@@ -136,6 +138,56 @@ void block_mult_random_test() {
 
   left_pre_block(blocks[1]);
   BLOCK_MULT(blocks[0], blocks[1], blocks[3]);
+  left_pre_block(blocks[3]);
+
+  for_each_element(x, y) {
+    if (fabs(blocks[2]->element[y][x] - blocks[3]->element[y][x]) > 0.01) {
+      printf("%d, %d\n", x, y);
+    }
+    CU_ASSERT_DOUBLE_EQUAL(blocks[2]->element[y][x], blocks[3]->element[y][x], 0.01);
+  }
+
+  for(i = 0;i < 4;i++) {
+    free_block(blocks[i]);
+  }
+  free(content_ptr);
+}
+
+void block_add_test() {
+  FILE *f;
+  char *content_ptr, *token, *context;
+  size_t file_size, read, index;
+  INNER_TYPE value_buf;
+  INDEX_TYPE i, x, y;
+  block *blocks[4];
+
+  for(i = 0;i < 4;i++) {
+    blocks[i] = allocate_block();
+  }
+  f = fopen("block_add_test_value", "r");
+  CU_ASSERT_PTR_NOT_NULL(f);
+
+  fseek(f, 0, SEEK_END);
+  file_size = (size_t)ftell(f);
+  fseek(f, 0, SEEK_SET);
+
+  content_ptr = (char*)malloc(file_size);
+
+  read = fread(content_ptr, sizeof(char), file_size, f);
+  CU_ASSERT_EQUAL(read, file_size);
+
+  index = 0;
+  token = strtok_r(content_ptr, ",", &context);
+  while(token != NULL && index < 3 * BLOCK_SIZE * BLOCK_SIZE) {
+    value_buf = atof(token);
+    blocks[index / (BLOCK_SIZE * BLOCK_SIZE)]->element[(index % (BLOCK_SIZE * BLOCK_SIZE)) / BLOCK_SIZE][(index % (BLOCK_SIZE * BLOCK_SIZE)) % BLOCK_SIZE] = value_buf;
+
+    index++;
+    token = strtok_r(NULL, ",", &context);
+  }
+
+  left_pre_block(blocks[1]);
+  block_add(blocks[0], blocks[1], blocks[3]);
   left_pre_block(blocks[3]);
 
   for_each_element(x, y) {

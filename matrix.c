@@ -122,6 +122,37 @@ void left_pre_matrix(matrix *mat) {
 #endif
 }
 
+void block_add(const block *const restrict left,
+               const block *const restrict right, block *const restrict dest) {
+#ifdef RIGHT_TRANSPOSE
+#ifdef USE_SIMD
+  // right and dest is transposed.
+  for(INDEX_TYPE x = 0; x < BLOCK_SIZE; x+=4) {
+    for(INDEX_TYPE y = 0; y < BLOCK_SIZE; y++) {
+      SIMD_TYPE left_fragment, right_fragment;
+      left_fragment[0] = left->element[x + 0][y];
+      left_fragment[1] = left->element[x + 1][y];
+      left_fragment[2] = left->element[x + 2][y];
+      left_fragment[3] = left->element[x + 3][y];
+
+      right_fragment = _mm256_load_pd(&right->element[y][x]);
+
+      left_fragment = _mm256_add_pd(left_fragment, right_fragment);
+
+      _mm256_store_pd(&dest->element[y][x], left_fragment);
+    }
+  }
+
+#else // USE_SIMD
+#error if you want it, write it yourself.
+#endif // USE_SIMD
+
+#else // RIGHT_TRANSPOSE
+#error if you want it, write it yourself.
+#endif // RIGHT_TRANSPOSE
+       
+}
+
 #ifdef BLOCK_MULT_FUNC
 
 inline void BLOCK_MULT(const block *const restrict left,

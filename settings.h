@@ -12,9 +12,9 @@
 
 #define INNER_TYPE double
 #define CACHE_SIZE 0x100
-#define INDEX_TYPE short
+#define INDEX_TYPE int
 
-#define PARALLEL 0x10
+#define PARALLEL 0x18
 
 #define SUPER_SIZE (MATRIX_SIZE / BLOCK_SIZE)
 

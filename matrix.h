@@ -92,6 +92,11 @@ void left_pre_block(block *blk);
 /// ASSUME: mat has been initialized.
 void left_pre_matrix(matrix *mat);
 
+/// ASSUME: left, right, dest has been initialized.
+/// ASSUME: left is not right and left is not dest
+void block_add(const block *const restrict left,
+               const block *const restrict right, block *const restrict dest);
+
 /// ASSUME: left, right and dest has been initialized.
 /// NOTE: This function will not initialize dest.
 ///       The result will be added into dest.
@@ -168,7 +173,7 @@ static inline void matrix_mult_per_block(
     }
   }
 
-  // puts("reducting");
+  puts("reducting");
 
 #pragma omp parallel for private(cache_block_x, block_x, block_y)              \
     num_threads(PARALLEL) schedule(static)
