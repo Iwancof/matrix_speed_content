@@ -15,6 +15,58 @@
   for (x = 0; x < BLOCK_SIZE; x++)                                             \
     for (y = 0; y < BLOCK_SIZE; y++)
 
+#define LOAD_LEFT_FRAGMENT(frag, left, y)                                      \
+  do {                                                                         \
+    frag##0 = _mm256_load_pd(&left->element[y][0]);                            \
+    frag##1 = _mm256_load_pd(&left->element[y][4]);                            \
+    frag##2 = _mm256_load_pd(&left->element[y][8]);                            \
+    frag##3 = _mm256_load_pd(&left->element[y][12]);                           \
+  } while (0)
+
+#define LOAD_RIGHT_FRAGMENT(frag, right, base_x, y)                            \
+  do {                                                                         \
+    frag##0 = _mm256_load_pd(&right->element[(base_x) + 0][y]);                \
+    frag##1 = _mm256_load_pd(&right->element[(base_x) + 1][y]);                \
+    frag##2 = _mm256_load_pd(&right->element[(base_x) + 2][y]);                \
+    frag##3 = _mm256_load_pd(&right->element[(base_x) + 3][y]);                \
+  } while (0)
+
+#define INIT_SUM(sum, lf, rf, li)                                              \
+  do {                                                                         \
+    sum##0 = _mm256_mul_pd(lf##li, rf##0);                                     \
+    sum##1 = _mm256_mul_pd(lf##li, rf##1);                                     \
+    sum##2 = _mm256_mul_pd(lf##li, rf##2);                                     \
+    sum##3 = _mm256_mul_pd(lf##li, rf##3);                                     \
+  } while (0)
+
+#define MULT_TO_TMP(tmp, lf, rf, li)                                           \
+  do {                                                                         \
+    tmp##0 = _mm256_mul_pd(lf##li, rf##0);                                     \
+    tmp##1 = _mm256_mul_pd(lf##li, rf##1);                                     \
+    tmp##2 = _mm256_mul_pd(lf##li, rf##2);                                     \
+    tmp##3 = _mm256_mul_pd(lf##li, rf##3);                                     \
+  } while (0)
+
+#define SUBMIT_TO_SUM(sum, tmp)                                                \
+  do {                                                                         \
+    sum##0 = _mm256_add_pd(sum##0, tmp##0);                                    \
+    sum##1 = _mm256_add_pd(sum##1, tmp##1);                                    \
+    sum##2 = _mm256_add_pd(sum##2, tmp##2);                                    \
+    sum##3 = _mm256_add_pd(sum##3, tmp##3);                                    \
+  } while (0)
+
+#define WRITEBACK_TO_DEST(dest, left_y, left_base_x, sum)                      \
+  do {                                                                         \
+    dest->element[left_y][(left_base_x) + 0] =                                 \
+        sum##0 [0] + sum##0 [1] + sum##0 [2] + sum##0 [3];                     \
+    dest->element[left_y][(left_base_x) + 1] =                                 \
+        sum##1 [0] + sum##1 [1] + sum##1 [2] + sum##1 [3];                     \
+    dest->element[left_y][(left_base_x) + 2] =                                 \
+        sum##2 [0] + sum##2 [1] + sum##2 [2] + sum##2 [3];                     \
+    dest->element[left_y][(left_base_x) + 3] =                                 \
+        sum##3 [0] + sum##3 [1] + sum##3 [2] + sum##3 [3];                     \
+  } while (0)
+
 typedef struct {
   INNER_TYPE element[BLOCK_SIZE][BLOCK_SIZE];
 } block;
