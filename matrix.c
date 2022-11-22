@@ -233,13 +233,9 @@ inline void BLOCK_MULT(const block *const restrict left,
       right_fragments[3] = _mm256_load_pd(&right->element[right_x][12]);
 
       left_fragments[0] = _mm256_mul_pd(left_fragments[0], right_fragments[0]);
-      left_fragments[1] = _mm256_mul_pd(left_fragments[1], right_fragments[1]);
-      left_fragments[2] = _mm256_mul_pd(left_fragments[2], right_fragments[2]);
-      left_fragments[3] = _mm256_mul_pd(left_fragments[3], right_fragments[3]);
-
-      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[1]);
-      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[2]);
-      left_fragments[0] = _mm256_add_pd(left_fragments[0], left_fragments[3]);
+      left_fragments[0] = _mm256_fmadd_pd(left_fragments[1], right_fragments[1], left_fragments[0]);
+      left_fragments[0] = _mm256_fmadd_pd(left_fragments[2], right_fragments[2], left_fragments[0]);
+      left_fragments[0] = _mm256_fmadd_pd(left_fragments[3], right_fragments[3], left_fragments[0]);
 
       dest->element[right_x][left_y] +=
           left_fragments[0][0] + left_fragments[0][1] + left_fragments[0][2] +
