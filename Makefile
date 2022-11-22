@@ -5,7 +5,7 @@ CONTAINER_NAME := icc
 OBJS := main.o matrix.o
 LINKER := mold
  
-COMMON_CFLAGS := -W -Wall -Wextra -flto -march=native -mtune=native -Ofast -msse4.2 -fexcess-precision=fast -ffast-math
+COMMON_CFLAGS := -W -Wall -Wextra -march=native -mtune=native -Ofast -msse4.2 -fexcess-precision=fast -ffast-math
 
 HOST_GCC_CFLAGS := -fopenmp -funroll-all-loops -static-libgcc
 DOCKER_ICX_FLAGS := -fiopenmp
@@ -21,15 +21,21 @@ matrix_test_value: tests/gen_matrix_test_value.py settings.h
 matrix_transpose_value: tests/gen_matrix_transpose.py settings.h
 	$(PYTHON) tests/gen_matrix_transpose.py
 
+block_mult.s: block_mult_template.s preprocess_assembly.py
+	$(PYTHON) preprocess_assembly.py
+
+host_block_mult.o: block_mult.s
+	$(HOST_CC) block_mult.s $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) -c -o $@
+
 host_main.o: main.c matrix.h settings.h
 	$(HOST_CC) main.c $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) -c -o $@
 host_matrix.o: matrix.c matrix.h settings.h
 	$(HOST_CC) matrix.c $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) -c -o $@
-host_main: host_main.o host_matrix.o
+host_main: host_block_mult.o host_main.o host_matrix.o
 	$(HOST_CC) $^ $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) -o $@
 host_unit_tests.o: tests/unit_tests.c matrix.h settings.h
 	$(HOST_CC) tests/unit_tests.c $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) -c -o $@
-host_tests: host_matrix.o host_unit_tests.o block_test_value block_add_test_value matrix_test_value matrix_transpose_value
+host_tests: host_matrix.o host_unit_tests.o host_block_mult.o block_test_value block_add_test_value matrix_test_value matrix_transpose_value
 	$(HOST_CC) host_matrix.o host_unit_tests.o $(COMMON_CFLAGS) $(HOST_GCC_CFLAGS) $(TEST_CFLAGS) -o $@
 
 inner_docker_main.o: main.c matrix.h settings.h

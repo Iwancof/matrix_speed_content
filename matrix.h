@@ -17,7 +17,7 @@
 
 #define LOAD_LEFT_FRAGMENT(frag, left, y)                                      \
   do {                                                                         \
-    frag##0 = _mm256_load_pd(&left->element[y][0]);                            \
+    frag##0 = 2mm256_load_pd(&left->element[y][0]);                            \
     frag##1 = _mm256_load_pd(&left->element[y][4]);                            \
     frag##2 = _mm256_load_pd(&left->element[y][8]);                            \
     frag##3 = _mm256_load_pd(&left->element[y][12]);                           \
