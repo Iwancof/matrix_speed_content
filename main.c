@@ -118,7 +118,7 @@ int inner_main() {
 
   matrix *thread_memo[PARALLEL];
   for (int i = 0; i < PARALLEL; i++) {
-    thread_memo[i] = map_matrix();
+    // thread_memo[i] = map_matrix();
   }
 
   INDEX_TYPE x, y, bx, by;
@@ -143,7 +143,8 @@ int inner_main() {
   matrix_mult_per_block(left, right, dest1, thread_memo);
   end = omp_get_wtime();
   // printf("[+] elapsed %f\n", end - start);
-  printf("%f\n", end - start);
+  printf("%fGFLOPS\n", ((double)MATRIX_SIZE * (double)MATRIX_SIZE * (double)MATRIX_SIZE * 2 / 1024 / 1024 / 1024) / (end - start));
+  // printf("%f\n", end - start);
 
   /*
   puts("vanilla");
@@ -158,7 +159,7 @@ int inner_main() {
   unmap_matrix(dest1);
 
   for (int i = 0; i < PARALLEL; i++) {
-    unmap_matrix(thread_memo[i]);
+    // unmap_matrix(thread_memo[i]);
   }
 
   return 0;
