@@ -11,12 +11,24 @@
 
 // TODO: assuming `sizeof(matrix)` is page aligned is not good.
 matrix *map_matrix() {
+#ifdef USE_64_HUGE
+  matrix *target;
+  size_t alignment;
+
+  alignment = sizeof(matrix);
+  target = (matrix*)mmap(NULL, 1024 * 1024 * 1024, PROT_READ | PROT_WRITE,
+                        MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB , -1, 0);
+  if(target == -1) {
+    perror("allocation failed");
+    exit(0);
+  }
+#else
   size_t mapped, alignment, length;
   matrix *target;
 
   alignment = sizeof(matrix);
   mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+                        MAP_ANONYMOUS | MAP_PRIVATE , -1, 0);
 
   if (mapped == 0) {
     perror("allocation error");
@@ -39,6 +51,7 @@ matrix *map_matrix() {
       perror("munmap error 2");
     }
   }
+#endif
 
   size_t x, y, bx, by;
   for_each_blocks(x, y) {
@@ -122,7 +135,8 @@ void left_pre_matrix(matrix *mat) {
 #endif
 }
 
-void matrix_copy(const matrix*const restrict from, matrix*const restrict dest) {
+void matrix_copy(const matrix *const restrict from,
+                 matrix *const restrict dest) {
   memcpy(dest, from, sizeof(matrix));
 }
 
@@ -625,5 +639,3 @@ void matrix_mult_vanilla(matrix *left, matrix *right, matrix *dest) {
     }
   }
 }
-
-
