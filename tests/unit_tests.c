@@ -4,7 +4,7 @@
 
 #include<stdlib.h>
 
-#include "matrix.h"
+#include "../matrix.h"
 
 void block_mult_unit_test();
 void block_mult_random_test();
@@ -116,7 +116,7 @@ void block_mult_random_test() {
   for(i = 0;i < 4;i++) {
     blocks[i] = allocate_block();
   }
-  f = fopen("block_test_value", "r");
+  f = fopen("tests/block_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);
@@ -166,7 +166,7 @@ void block_add_test() {
   for(i = 0;i < 4;i++) {
     blocks[i] = allocate_block();
   }
-  f = fopen("block_add_test_value", "r");
+  f = fopen("tests/block_add_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);
@@ -215,7 +215,7 @@ void block_add_2_test() {
   for(i = 0;i < 4;i++) {
     blocks[i] = allocate_block();
   }
-  f = fopen("block_add_test_value", "r");
+  f = fopen("tests/block_add_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);
@@ -280,7 +280,7 @@ void block_transpose_test() {
 }
 
 void matrix_transpose_test() {
-  FILE *f = fopen("matrix_transpose_value", "r");
+  FILE *f = fopen("tests/matrix_transpose_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);
@@ -337,7 +337,7 @@ void matrix_transpose_test() {
 }
 
 void matrix_mult_random_test() {
-  FILE *f = fopen("matrix_test_value", "r");
+  FILE *f = fopen("tests/matrix_test_value", "r");
   CU_ASSERT_PTR_NOT_NULL(f);
 
   fseek(f, 0, SEEK_END);

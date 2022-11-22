@@ -16,7 +16,7 @@ dest = left @ right
 # print(dest)
 
 
-f = open("./matrix_test_value", "w")
+f = open("tests/matrix_test_value", "w")
 
 for per_y in left:
     for element in per_y:

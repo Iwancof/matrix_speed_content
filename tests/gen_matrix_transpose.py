@@ -7,7 +7,7 @@ size = settings["MATRIX_SIZE"]
 
 mat = np.random.rand(size, size)
 
-f = open("./matrix_transpose_value", "w")
+f = open("tests/matrix_transpose_value", "w")
 
 for per_y in mat:
     for element in per_y:

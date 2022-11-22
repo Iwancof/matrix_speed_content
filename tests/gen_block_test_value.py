@@ -10,7 +10,7 @@ right = np.random.rand(size, size)
 
 dest = left @ right
 
-f = open("./block_test_value", "w")
+f = open("tests/block_test_value", "w")
 
 for per_y in left:
     for element in per_y:
