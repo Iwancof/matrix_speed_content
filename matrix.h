@@ -55,6 +55,14 @@
     sum##3 = _mm256_add_pd(sum##3, tmp##3);                                    \
   } while (0)
 
+#define FUSED_TO_SUM(sum, lf, rf, li)                                          \
+  do {                                                                         \
+    sum##0 = _mm256_fmadd_pd(lf##li, rf##0, sum##0);                           \
+    sum##1 = _mm256_fmadd_pd(lf##li, rf##1, sum##1);                           \
+    sum##2 = _mm256_fmadd_pd(lf##li, rf##2, sum##2);                           \
+    sum##3 = _mm256_fmadd_pd(lf##li, rf##3, sum##3);                           \
+  } while (0)
+
 #define WRITEBACK_TO_DEST(dest, left_y, left_base_x, sum)                      \
   do {                                                                         \
     dest->element[(left_base_x) + 0][left_y] +=                                \

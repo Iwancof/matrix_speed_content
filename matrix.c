@@ -251,6 +251,7 @@ inline void BLOCK_MULT(const block *const restrict left,
 #if BLOCK_SIZE != 0x10
 #error UNROLL_HARD needs being BLOCK_SIZE == 0x10
 #endif // SIMD_PER_BLOCK
+  // _mm256_fmadd_pd(__m256d A, __m256d B, __m256d C)
 
   SIMD_TYPE left_fragment0;
   SIMD_TYPE left_fragment1;
@@ -267,12 +268,7 @@ inline void BLOCK_MULT(const block *const restrict left,
   SIMD_TYPE sum2;
   SIMD_TYPE sum3;
 
-  SIMD_TYPE tmp0;
-  SIMD_TYPE tmp1;
-  SIMD_TYPE tmp2;
-  SIMD_TYPE tmp3;
-
-  // consume 16 registers(ymm)
+  // consume 12 registers(ymm)
 
   LOAD_LEFT_FRAGMENT(left_fragment, left, 0);
   // LOAD_RIGHT_FRAGMENT(right_fragment, right, 0, 0);
@@ -286,16 +282,13 @@ inline void BLOCK_MULT(const block *const restrict left,
     INIT_SUM(sum, left_fragment, right_fragment, 0);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
     WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -305,16 +298,13 @@ inline void BLOCK_MULT(const block *const restrict left,
     INIT_SUM(sum, left_fragment, right_fragment, 3);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
     WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -325,16 +315,13 @@ inline void BLOCK_MULT(const block *const restrict left,
       INIT_SUM(sum, left_fragment, right_fragment, 0);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
       WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -344,16 +331,13 @@ inline void BLOCK_MULT(const block *const restrict left,
       INIT_SUM(sum, left_fragment, right_fragment, 3);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
       WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -368,16 +352,13 @@ inline void BLOCK_MULT(const block *const restrict left,
     INIT_SUM(sum, left_fragment, right_fragment, 0);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
     WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -387,16 +368,13 @@ inline void BLOCK_MULT(const block *const restrict left,
     INIT_SUM(sum, left_fragment, right_fragment, 3);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
     LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
-    MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
-    SUBMIT_TO_SUM(sum, tmp);
+    FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
     WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -407,16 +385,13 @@ inline void BLOCK_MULT(const block *const restrict left,
       INIT_SUM(sum, left_fragment, right_fragment, 0);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 3);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
       WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
 
@@ -426,16 +401,13 @@ inline void BLOCK_MULT(const block *const restrict left,
       INIT_SUM(sum, left_fragment, right_fragment, 3);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 2);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 1);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
       LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
-      MULT_TO_TMP(tmp, left_fragment, right_fragment, 0);
-      SUBMIT_TO_SUM(sum, tmp);
+      FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
       WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
     } while (0 < left_y);
