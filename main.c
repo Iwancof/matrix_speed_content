@@ -143,8 +143,8 @@ int inner_main() {
   matrix_mult_per_block(left, right, dest1, thread_memo);
   end = omp_get_wtime();
   // printf("[+] elapsed %f\n", end - start);
-  printf("%fGFLOPS\n", ((double)MATRIX_SIZE * (double)MATRIX_SIZE * (double)MATRIX_SIZE * 2 / 1024 / 1024 / 1024) / (end - start));
-  // printf("%f\n", end - start);
+  // printf("%fGFLOPS\n", ((double)MATRIX_SIZE * (double)MATRIX_SIZE * (double)MATRIX_SIZE * 2 / 1024 / 1024 / 1024) / (end - start));
+  printf("%f\n", end - start);
 
   /*
   puts("vanilla");

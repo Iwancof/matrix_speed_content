@@ -16,9 +16,9 @@ matrix *map_matrix() {
   size_t alignment;
 
   alignment = sizeof(matrix);
-  target = (matrix*)mmap(NULL, 1024 * 1024 * 1024, PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB , -1, 0);
-  if(target == -1) {
+  target = (matrix *)mmap(NULL, 1024 * 1024 * 1024, PROT_READ | PROT_WRITE,
+                          MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
+  if (target == -1) {
     perror("allocation failed");
     exit(0);
   }
@@ -28,7 +28,7 @@ matrix *map_matrix() {
 
   alignment = sizeof(matrix);
   mapped = (size_t)mmap(NULL, alignment * 2, PROT_READ | PROT_WRITE,
-                        MAP_ANONYMOUS | MAP_PRIVATE , -1, 0);
+                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
   if (mapped == 0) {
     perror("allocation error");
@@ -186,9 +186,8 @@ void block_add_2(const block *const restrict left,
 
 #ifdef BLOCK_MULT_FUNC
 
-inline void BLOCK_MULT(const block *const restrict left,
-                       const block *const restrict right,
-                       block *const restrict dest) {
+void BLOCK_MULT(const block *const restrict left,
+                const block *const restrict right, block *const restrict dest) {
   DOC(TODO : replace fast algorithm)
   DOC(__builtin_prefetch(&(left)->element, 0);)
   DOC(__builtin_prefetch(&(right)->element, 0);)
@@ -220,26 +219,29 @@ inline void BLOCK_MULT(const block *const restrict left,
   }
 #elif UNROLLED_SIMD == UNROLL_NORMAL
   for (INDEX_TYPE left_y = 0; left_y < BLOCK_SIZE; left_y++) {
+    SIMD_TYPE left_fragments[SIMD_PER_BLOCK];
+    SIMD_TYPE right_fragments[SIMD_PER_BLOCK];
+    left_fragments[0] = _mm256_load_pd(&left->element[left_y][0]);
+    left_fragments[1] = _mm256_load_pd(&left->element[left_y][4]);
+    left_fragments[2] = _mm256_load_pd(&left->element[left_y][8]);
+    left_fragments[3] = _mm256_load_pd(&left->element[left_y][12]);
     for (INDEX_TYPE right_x = 0; right_x < BLOCK_SIZE; right_x++) {
-      SIMD_TYPE left_fragments[SIMD_PER_BLOCK], right_fragments[SIMD_PER_BLOCK];
-
-      left_fragments[0] = _mm256_load_pd(&left->element[left_y][0]);
-      left_fragments[1] = _mm256_load_pd(&left->element[left_y][4]);
-      left_fragments[2] = _mm256_load_pd(&left->element[left_y][8]);
-      left_fragments[3] = _mm256_load_pd(&left->element[left_y][12]);
       right_fragments[0] = _mm256_load_pd(&right->element[right_x][0]);
       right_fragments[1] = _mm256_load_pd(&right->element[right_x][4]);
       right_fragments[2] = _mm256_load_pd(&right->element[right_x][8]);
       right_fragments[3] = _mm256_load_pd(&right->element[right_x][12]);
 
-      left_fragments[0] = _mm256_mul_pd(left_fragments[0], right_fragments[0]);
-      left_fragments[0] = _mm256_fmadd_pd(left_fragments[1], right_fragments[1], left_fragments[0]);
-      left_fragments[0] = _mm256_fmadd_pd(left_fragments[2], right_fragments[2], left_fragments[0]);
-      left_fragments[0] = _mm256_fmadd_pd(left_fragments[3], right_fragments[3], left_fragments[0]);
+      right_fragments[0] = _mm256_mul_pd(left_fragments[0], right_fragments[0]);
+      right_fragments[0] = _mm256_fmadd_pd(
+          left_fragments[1], right_fragments[1], right_fragments[0]);
+      right_fragments[0] = _mm256_fmadd_pd(
+          left_fragments[2], right_fragments[2], right_fragments[0]);
+      right_fragments[0] = _mm256_fmadd_pd(
+          left_fragments[3], right_fragments[3], right_fragments[0]);
 
       dest->element[right_x][left_y] +=
-          left_fragments[0][0] + left_fragments[0][1] + left_fragments[0][2] +
-          left_fragments[0][3];
+          right_fragments[0][0] + right_fragments[0][1] + right_fragments[0][2] +
+          right_fragments[0][3];
     }
   }
 #elif UNROLLED_SIMD == UNROLL_HARD
@@ -475,7 +477,7 @@ void matrix_mult_per_block(const matrix *const restrict left,
   IGNORE_UNUSED(thread_memo);
 
 #pragma omp parallel for private(cache_block_y, move) num_threads(PARALLEL)    \
-    schedule(static)
+    schedule(guided)
   for (cache_block_x = 0; cache_block_x < SUPER_SIZE; cache_block_x++) {
     for (cache_block_y = 0; cache_block_y < SUPER_SIZE;
          cache_block_y++) { // for write cache
