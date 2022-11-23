@@ -198,7 +198,7 @@ void BLOCK_MULT(const block *const restrict left,
 #ifdef USE_SIMD
 
 #ifndef UNROLLED_SIMD
-#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD.
+#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD UNROLL_INSANE_ASM.
 #endif // UNROLLED_SIMD
 
 #if UNROLLED_SIMD == UNROLL_DISABLED
@@ -240,8 +240,8 @@ void BLOCK_MULT(const block *const restrict left,
           left_fragments[3], right_fragments[3], right_fragments[0]);
 
       dest->element[right_x][left_y] +=
-          right_fragments[0][0] + right_fragments[0][1] + right_fragments[0][2] +
-          right_fragments[0][3];
+          right_fragments[0][0] + right_fragments[0][1] +
+          right_fragments[0][2] + right_fragments[0][3];
     }
   }
 #elif UNROLLED_SIMD == UNROLL_HARD
@@ -411,8 +411,10 @@ void BLOCK_MULT(const block *const restrict left,
     } while (0 < left_y);
   }
 
+#elif UNROLLED_SIMD == UNROLL_INSANE_ASM
+  block_mult_asm(left, right, dest);
 #else // UNROLLED_SIMD
-#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD.
+#error Set UNROLLED_SIMD to UNROLL_DISABLED, UNROLL_NORMAL, UNROLL_HARD UNROLL_INSANE_ASM.
 #endif // UNROLLED_SIMD
 #else  // USE_SIMD
   for (INDEX_TYPE width = 0; width < BLOCK_SIZE; width++) {

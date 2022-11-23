@@ -120,6 +120,14 @@ void block_add_2(const block *const restrict left,
 
 #ifdef BLOCK_MULT_FUNC
 
+#if UNROLLED_SIMD == UNROLL_INSANE_ASM
+
+void block_mult_asm(const block *const restrict left,
+                    const block *const restrict right,
+                    block *const restrict dest);
+
+#endif // UNROLLED_SIMD
+
 void BLOCK_MULT(const block *const restrict left,
                 const block *const restrict right, block *const restrict dest);
 

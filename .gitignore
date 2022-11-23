@@ -13,4 +13,6 @@
 /html
 /latex
 /doxygen_conf
+/block_mult.s
+/block_mult.o
 
