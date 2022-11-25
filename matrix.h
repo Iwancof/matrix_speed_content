@@ -23,12 +23,26 @@
     frag##3 = _mm256_load_pd(&left->element[y][12]);                           \
   } while (0)
 
+#define PREFETCH_LEFT(left, y)                                                 \
+  do {                                                                         \
+    __builtin_prefetch(&left->element[y][0], 0);                               \
+    __builtin_prefetch(&left->element[y][8], 0);                               \
+  } while (0)
+
 #define LOAD_RIGHT_FRAGMENT(frag, right, base_x, y)                            \
   do {                                                                         \
     frag##0 = _mm256_load_pd(&right->element[(base_x) + 0][y]);                \
     frag##1 = _mm256_load_pd(&right->element[(base_x) + 1][y]);                \
     frag##2 = _mm256_load_pd(&right->element[(base_x) + 2][y]);                \
     frag##3 = _mm256_load_pd(&right->element[(base_x) + 3][y]);                \
+  } while (0)
+
+#define PREFETCH_RIGHT(right, base_x, y)                                       \
+  do {                                                                         \
+    __builtin_prefetch(&right->element[(base_x) + 0][y], 0);                   \
+    __builtin_prefetch(&right->element[(base_x) + 1][y], 0);                   \
+    __builtin_prefetch(&right->element[(base_x) + 2][y], 0);                   \
+    __builtin_prefetch(&right->element[(base_x) + 3][y], 0);                   \
   } while (0)
 
 #define INIT_SUM(sum, lf, rf, li)                                              \
@@ -75,13 +89,21 @@
         sum##3 [0] + sum##3 [1] + sum##3 [2] + sum##3 [3];                     \
   } while (0)
 
+#define PREFETCH_DEST(dest, left_y, left_base_x)                               \
+  do {                                                                         \
+    __builtin_prefetch(&dest->element[(left_base_x) + 0][left_y], 1);          \
+    __builtin_prefetch(&dest->element[(left_base_x) + 1][left_y], 1);          \
+    __builtin_prefetch(&dest->element[(left_base_x) + 2][left_y], 1);          \
+    __builtin_prefetch(&dest->element[(left_base_x) + 3][left_y], 1);          \
+  } while (0);
+
 typedef struct {
   INNER_TYPE element[BLOCK_SIZE][BLOCK_SIZE];
 } block;
 
-typedef struct {
+typedef struct _matrix {
   block blocks[SUPER_SIZE][SUPER_SIZE]; // TODO: Replace with L2 cache.
-} matrix;
+} matrix __attribute__((aligned(sizeof(struct _matrix))));
 
 matrix *map_matrix();
 void unmap_matrix(matrix *mat);

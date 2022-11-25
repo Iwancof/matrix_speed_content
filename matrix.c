@@ -16,7 +16,7 @@ matrix *map_matrix() {
   size_t alignment;
 
   alignment = sizeof(matrix);
-  target = (matrix *)mmap(NULL, 1024 * 1024 * 1024, PROT_READ | PROT_WRITE,
+  target = (matrix *)mmap(NULL, 1021 * 1021 * 1024, PROT_READ | PROT_WRITE,
                           MAP_ANONYMOUS | MAP_PRIVATE | MAP_HUGETLB, -1, 0);
   if (target == -1) {
     perror("allocation failed");
@@ -270,144 +270,184 @@ void BLOCK_MULT(const block *const restrict left,
 
   LOAD_LEFT_FRAGMENT(left_fragment, left, 0);
   // LOAD_RIGHT_FRAGMENT(right_fragment, right, 0, 0);
+  PREFETCH_RIGHT(right, 1 * 0, 0);
 
-  for (INDEX_TYPE left_up_down_counter = 0; left_up_down_counter < 4;
-       left_up_down_counter++) {
+  for (INDEX_TYPE left_up_down_counter = 0; left_up_down_counter < 16;
+       left_up_down_counter+=4) {
     INDEX_TYPE left_y = 0;
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
     // LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
     INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 12);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+    PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 12);
+    PREFETCH_LEFT(left, left_y + 1);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
-    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
     left_y += 1;
 
     LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
     INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 0);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+    PREFETCH_LEFT(left, left_y + 1);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
-    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
     left_y += 1;
 
     do {
       LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
       INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 12);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+      PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 12);
+      PREFETCH_LEFT(left, left_y + 1);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
-      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
       left_y += 1;
 
       LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
       INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 0);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+      PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+      PREFETCH_LEFT(left, left_y + 1);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
-      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
       left_y += 1;
     } while (left_y < 16);
 
-    left_up_down_counter += 1;
+    left_up_down_counter += 4;
     left_y -= 1;
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
-    // LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
     INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 12);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+    PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 12);
+    PREFETCH_LEFT(left, left_y - 1);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
-    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
     left_y -= 1;
 
     LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
     INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+    PREFETCH_RIGHT(right, 1 * left_up_down_counter, 0);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-    LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+    PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+    LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+    PREFETCH_LEFT(left, left_y - 1);
     FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
-    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+    WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
     do {
       left_y -= 1;
 
       LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
       INIT_SUM(sum, left_fragment, right_fragment, 0);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 12);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 12);
+      PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 12);
+      PREFETCH_LEFT(left, left_y - 1);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 3);
 
-      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
 
       left_y -= 1;
 
       LOAD_LEFT_FRAGMENT(left_fragment, left, left_y);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 8);
       INIT_SUM(sum, left_fragment, right_fragment, 3);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 8);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 8);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 4);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 2);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 4);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 4);
+      PREFETCH_RIGHT(right, 1 * left_up_down_counter, 0);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 1);
 
-      LOAD_RIGHT_FRAGMENT(right_fragment, right, 4 * left_up_down_counter, 0);
+      PREFETCH_DEST(dest, left_y, left_up_down_counter * 1);
+      LOAD_RIGHT_FRAGMENT(right_fragment, right, 1 * left_up_down_counter, 0);
+      PREFETCH_LEFT(left, left_y - 1);
       FUSED_TO_SUM(sum, left_fragment, right_fragment, 0);
 
-      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 4, sum);
+      WRITEBACK_TO_DEST(dest, left_y, left_up_down_counter * 1, sum);
     } while (0 < left_y);
   }
 

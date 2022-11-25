@@ -109,11 +109,14 @@ int inner_main() {
 }
 
 #else
+
+matrix left, right, dest1;
+
 int inner_main() {
 
-  matrix *left = map_matrix();
-  matrix *right = map_matrix();
-  matrix *dest1 = map_matrix();
+  // matrix *left = map_matrix();
+  // matrix *right = map_matrix();
+  // matrix *dest1 = map_matrix();
   // matrix *dest2 = allocate_matrix();
 
   matrix *thread_memo[PARALLEL];
@@ -124,39 +127,38 @@ int inner_main() {
   INDEX_TYPE x, y, bx, by;
   for_each_blocks(x, y) {
     for_each_element(bx, by) {
-      left->blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
+      left.blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
     }
   }
   for_each_blocks(x, y) {
     for_each_element(bx, by) {
-      right->blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
+      right.blocks[y][x].element[by][bx] = (double)rand() / RAND_MAX;
+    }
+  }
+  for_each_blocks(x, y) {
+    for_each_element(bx, by) {
+      dest1.blocks[y][x].element[by][bx] = 0.;
     }
   }
 
-  left_pre_matrix(right); // not needed for benchmark
+  left_pre_matrix(&right); // not needed for benchmark
 
   // puts("[+] matrix allocated!");
+
+  printf("%p\n", &left);
 
   double start, end;
 
   start = omp_get_wtime();
-  matrix_mult_per_block(left, right, dest1, thread_memo);
+  matrix_mult_per_block(&left, &right, &dest1, thread_memo);
   end = omp_get_wtime();
   // printf("[+] elapsed %f\n", end - start);
   // printf("%fGFLOPS\n", ((double)MATRIX_SIZE * (double)MATRIX_SIZE * (double)MATRIX_SIZE * 2 / 1024 / 1024 / 1024) / (end - start));
   printf("%f\n", end - start);
 
-  /*
-  puts("vanilla");
-  start = omp_get_wtime();
-  matrix_mult_vanilla(left, right, dest2);
-  end = omp_get_wtime();
-  printf("elapsed %f\n", end - start);
-  */
-
-  unmap_matrix(left);
-  unmap_matrix(right);
-  unmap_matrix(dest1);
+  // unmap_matrix(left);
+  // unmap_matrix(right);
+  // unmap_matrix(dest1);
 
   for (int i = 0; i < PARALLEL; i++) {
     // unmap_matrix(thread_memo[i]);
